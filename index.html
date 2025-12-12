@@ -14,7 +14,7 @@
             --muted:#6c757d;
             --text:#212529;
             --border:#dee2e6;
-            --shadow:0 4px 6px rgba(0,0,0,0.08);
+            --shadow:0 6px 18px rgba(0,0,0,0.06);
             --font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         }
         *{box-sizing:border-box;margin:0;padding:0}
@@ -73,13 +73,13 @@
 
         /* modal */
         .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000}
-        .modal{width:90%;max-width:760px;background:#fff;border-radius:12px;padding:18px;border:1px solid var(--border);box-shadow:var(--shadow)}
+        .modal{width:92%;max-width:760px;background:#fff;border-radius:12px;padding:18px;border:1px solid var(--border);box-shadow:var(--shadow)}
         .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
         .modal-title{font-weight:900}
-        .modal-tabs{display:flex;gap:8px;margin-bottom:12px}
+        .modal-tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
         .tab-btn{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-weight:700}
         .tab-btn.active{background:linear-gradient(90deg,var(--primary),var(--accent));color:#fff;border:none}
-        .modal-content{background:#fff;padding:12px;border-radius:8px;border:1px solid var(--border)}
+        .modal-content{background:#fff;padding:12px;border-radius:8px;border:1px solid var(--border);min-height:100px}
         .blind{filter:blur(8px);position:relative}
         .reveal-btn{position:absolute;right:12px;top:12px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:13px}
 
@@ -264,7 +264,6 @@ function renderRecommendations(recs, initialCount=5){
             loadMoreCount++;
             // 다시 렌더
             const outputArea = document.getElementById("output-area");
-            // we preserve existing summary block then re-render recs
             const current = outputArea._lastData || {summary:"", recommendations:[]};
             renderFullOutput(current);
         }
@@ -360,14 +359,9 @@ function openRecModal(rec){
     revealBtn.className = "reveal-btn";
     revealBtn.textContent = "보기";
     revealBtn.addEventListener("click", (e)=>{
-        // toggle blur
-        if(synopsisDiv.classList.contains("blind")){
-            synopsisDiv.classList.remove("blind");
-            revealBtn.style.display = "none";
-        } else {
-            synopsisDiv.classList.add("blind");
-            revealBtn.style.display = "block";
-        }
+        // reveal once
+        synopsisDiv.classList.remove("blind");
+        revealBtn.style.display = "none";
     });
     blindWrap.appendChild(synopsisDiv);
     blindWrap.appendChild(revealBtn);
