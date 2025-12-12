@@ -1,262 +1,680 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>영화 추천 — 탭/팝업 UI</title>
-<style>
-:root{
-  --bg:#f1f4f9;--card:#fff;--muted:#6b7280;--primary:#0b63d6;--accent:#d63384;--border:#e6edf3;
-  --font: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR", "Helvetica Neue",Arial, "Noto Sans";
-}
-*{box-sizing:border-box}
-body{font-family:var(--font);background:var(--bg);margin:0;padding:28px;display:flex;justify-content:center}
-.app{width:100%;max-width:980px;background:var(--card);border-radius:12px;border:1px solid var(--border);box-shadow:0 8px 30px rgba(11,22,40,0.06);overflow:hidden}
-.header{padding:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.h-title{font-weight:800;font-size:18px}
-.controls{display:flex;gap:16px;padding:18px;border-bottom:1px solid var(--border)}
-.inputs{flex:1;display:flex;flex-direction:column;gap:10px}
-input,textarea{padding:10px;border-radius:8px;border:1px solid var(--border);background:#fbfdff}
-.btn{padding:10px 12px;border-radius:8px;border:none;background:var(--primary);color:white;cursor:pointer;font-weight:700}
-.hint{width:300px;padding:12px;border-radius:8px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid var(--border);color:var(--muted);font-size:13px}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 시네마 매치업 엔진</title>
+    <style>
+        /* * DESIGN THEME: Modern Light Dashboard with High-Tech Panels (Moderated Dark Colors) */
+        :root {
+            --bg-color: #f0f2f5; 
+            --container-bg: #ffffff; 
+            --card-bg: #f8f9fa; 
+            --accent-primary: #0056b3; 
+            --accent-secondary: #d63384; 
+            --text-main: #212529; 
+            --text-muted: #6c757d; 
+            --border-color: #dee2e6;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            
+            /* High-Tech Colors (MODERATED FOR LIGHTER AESTHETIC) */
+            --panel-bg: #f0f4f8; /* Light gray-blue for container/button */
+            --panel-accent: #3b82f6; /* Blue Neon (Accent) */
+            --panel-text: #344458; /* Dark text for contrast */
+            --spoiler-bg: #ffffff; /* Pure white for content background */
+            --spoiler-border: #ef4444; /* Red for warning */
+            --review-border: #3b82f6; /* Blue for info */
+        }
 
-/* Results area: analysis box hidden by default (요청대로 줄글 숨김) */
-.results{padding:16px}
-.analysis-box{display:none;} /* 줄글 부분 숨김 */
-.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-.tab{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;background:#fff;border:1px solid var(--border);min-width:240px;cursor:pointer}
-.tab .meta{flex:1;overflow:hidden}
-.tab .meta .t{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tab .meta .s{font-size:13px;color:var(--muted);margin-top:6px}
-.match{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.gauge{width:110px;height:8px;border-radius:999px;background:#eef5ff;overflow:hidden}
-.gauge>i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));width:0%}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-/* load more */
-.load-more{margin-top:12px;display:flex;gap:8px}
-.load-more button{padding:10px;border-radius:8px;border:2px solid var(--primary);background:transparent;color:var(--primary);font-weight:800;cursor:pointer}
-.load-more button:disabled{opacity:0.5;cursor:default}
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
 
-/* modal */
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:flex-start;justify-content:center;padding:40px;z-index:60}
-.modal{width:100%;max-width:760px;background:#fff;border-radius:10px;padding:16px;border:1px solid var(--border);max-height:84vh;overflow:auto}
-.modal-header{display:flex;justify-content:space-between;align-items:center}
-.sections{display:flex;gap:8px;margin-top:12px}
-.sec-btn{padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:#f6f9ff;cursor:pointer;font-weight:700}
-.sec-btn.active{background:#fff;border:1px solid var(--primary);color:var(--primary)}
-.spoiler{background:#fafafa;padding:12px;border-radius:8px;border:1px dashed #ddd;position:relative}
-.spoiler .cover{position:absolute;inset:0;background:linear-gradient(90deg, rgba(255,255,255,0.96), rgba(255,255,255,0.8));display:flex;align-items:center;justify-content:center;border-radius:8px;font-weight:700;color:var(--muted);cursor:pointer}
-.spoiler.revealed .cover{display:none}
+        /* Layout Container */
+        .broadcast-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--container-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
 
-/* responsive */
-@media(max-width:880px){.controls{flex-direction:column}.hint{width:100%}}
-</style>
+        .broadcast-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        header {
+            padding: 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            background-color: #fff;
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .main-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .sub-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .sub-title span {
+            color: var(--accent-primary);
+        }
+
+        .live-badge {
+            background-color: var(--accent-primary);
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0, 86, 179, 0.3);
+        }
+
+        .control-panel {
+            padding: 30px;
+            background-color: #fff;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 14px;
+            color: var(--accent-primary);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            background-color: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-main);
+            padding: 15px;
+            font-size: 16px;
+            font-family: var(--font-main);
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--accent-primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+        }
+
+        ::placeholder {
+            color: #adb5bd;
+            font-size: 14px;
+        }
+
+        .analyze-btn {
+            width: 100%;
+            background: var(--accent-primary);
+            color: #fff;
+            border: none;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 86, 179, 0.2);
+        }
+
+        .analyze-btn:hover {
+            background: #004494;
+            transform: translateY(-1px);
+        }
+
+        .analyze-btn:active {
+            transform: translateY(0);
+        }
+
+        .results-panel {
+            background-color: #f8f9fa;
+            padding: 30px;
+            min-height: 200px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-header::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 16px;
+            background-color: var(--accent-secondary);
+            border-radius: 2px;
+        }
+
+        /* --- List Card Styles --- */
+        .list-card {
+            background-color: #fff;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            cursor: pointer; 
+            transition: background-color 0.2s, transform 0.1s;
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        
+        .list-card:hover {
+            background-color: #e9f0f6; 
+            transform: translateY(-1px);
+        }
+
+        .list-rank {
+            background-color: var(--accent-primary);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-right: 15px;
+        }
+
+        .list-content {
+            flex-grow: 1;
+            min-width: 0;
+        }
+        
+        .list-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .list-reason {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 3px;
+        }
+        
+        .list-match {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-secondary);
+            flex-shrink: 0;
+            margin-left: 15px;
+        }
+
+        /* --- Detail View Styles --- */
+        .detail-view-wrapper {
+            animation: fadeIn 0.4s ease-out; 
+        }
+
+        .detail-view {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            margin-top: 20px;
+        }
+        
+        .detail-header {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detail-badge {
+            font-size: 13px;
+            padding: 5px 10px;
+            background-color: var(--accent-secondary);
+            color: white;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .info-block {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--card-bg);
+            border-radius: 6px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: var(--accent-primary);
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .info-text {
+            font-size: 15px;
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+        }
+        
+        /* --- High-Tech Panel Styles for Spoiler/Review (LIGHTER) --- */
+        .spoiler-container, .review-container {
+            margin-top: 25px;
+            padding: 0; 
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: var(--panel-bg); /* Light background for the container */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05), 0 0 5px rgba(59, 130, 246, 0.1); 
+        }
+        
+        .spoiler-container {
+            border: 2px solid var(--spoiler-border); /* Warning color border */
+        }
+        .review-container {
+            border: 2px solid var(--review-border); /* Info color border */
+        }
+
+        .toggle-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            text-align: left;
+            transition: background-color 0.2s, color 0.2s;
+            color: var(--panel-text); /* Dark text */
+            background-color: var(--panel-bg); /* Light gray-blue */
+            border-bottom: 1px solid var(--border-color); 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .toggle-btn:hover {
+            background-color: #e2e8f0; /* Slightly darker light */
+        }
+        
+        .toggle-icon {
+            font-size: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .expanded-btn .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .panel-title-label {
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Content Area */
+        .spoiler-content, .review-content {
+            background-color: var(--spoiler-bg); /* Pure White */
+            padding: 20px; 
+            color: var(--panel-text); /* Dark text */
+        }
+
+        .content-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--panel-accent); /* Neon color for internal labels */
+            margin-bottom: 10px;
+            display: block;
+            border-bottom: 1px dashed rgba(52, 68, 88, 0.2); /* Darker dashed line */
+            padding-bottom: 5px;
+        }
+        
+        .spoiler-text, .review-text {
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 15px;
+            padding: 10px 0;
+        }
+        
+        .review-section {
+            margin-bottom: 20px;
+        }
+
+        /* Smooth Expansion/Collapse Logic */
+        .expandable-content {
+            max-height: 0;
+            opacity: 0;
+            visibility: hidden;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out, padding 0.5s ease-in-out;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .expanded {
+            max-height: 1000px; /* Sufficiently large value */
+            opacity: 1;
+            visibility: visible;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        .back-to-list-btn {
+            background-color: var(--text-muted);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.2s;
+        }
+        
+        .back-to-list-btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* Load More Button & Status */
+        .load-more-btn {
+            width: 100%;
+            background-color: var(--card-bg);
+            color: var(--accent-primary);
+            border: 2px solid var(--accent-primary);
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .load-more-btn:hover:not(:disabled) {
+            background-color: var(--accent-primary);
+            color: white;
+        }
+        .load-more-btn:disabled {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-muted);
+            cursor: default;
+        }
+
+        /* --- [START] Modern Spinner Styles --- */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .spinner-ring {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 86, 179, 0.2); /* Light primary color */
+            border-radius: 50%;
+            border-top-color: var(--accent-primary); /* Primary color for rotation part */
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 15px; /* Increased margin */
+        }
+        
+        .status-msg {
+            text-align: center;
+            line-height: 1.6;
+        }
+        /* --- [END] Modern Spinner Styles --- */
+
+        /* Animations */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .broadcast-container {
+                width: 100%;
+                border: none;
+                border-radius: 0;
+            }
+            .list-card {
+                flex-wrap: wrap;
+            }
+            .list-rank {
+                order: 1;
+                margin-right: 10px;
+            }
+            .list-content {
+                order: 2;
+                flex-basis: 70%;
+            }
+            .list-match {
+                order: 3;
+                width: 100%;
+                margin: 5px 0 0 0;
+                text-align: right;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="app">
-  <div class="header">
-    <div>
-      <div class="h-title">AI 영화 추천 (탭 / 팝업 UI)</div>
-      <div style="color:var(--muted);font-size:13px">분석 텍스트는 숨기고 추천 탭/팝업으로만 표시합니다.</div>
-    </div>
-    <div style="font-weight:800;color:var(--primary)">Ready</div>
-  </div>
 
-  <div class="controls">
-    <div class="inputs">
-      <div>
-        <label style="font-weight:700;color:var(--primary)">분석 대상 영화</label>
-        <input id="movieTitle" type="text" placeholder="영화 제목을 입력하세요" />
-      </div>
-      <div>
-        <label style="font-weight:700;color:var(--primary)">상세 요청 (선택)</label>
-        <textarea id="userDetail" rows="3" placeholder="장르, 분위기, 배우 등"></textarea>
-      </div>
-      <div style="margin-top:8px">
-        <button class="btn" onclick="onRunAIButtonClicked()">분석 및 추천 시작</button>
-      </div>
-    </div>
+<div class="broadcast-container">
+    <header>
+        <div class="header-content">
+            <div class="main-title">AI 기반 연관 영화 작품 추천 시스템</div>
+            <div class="sub-title">AI <span>MATCHUP</span> ENGINE</div>
+        </div>
+        <div class="live-badge">System Ready</div>
+    </header>
 
-    <div class="hint">
-      상단의 분석 텍스트는 사용자 요청에 따라 숨김 처리했습니다. 추천은 탭을 클릭해 팝업에서 확인하세요.
-    </div>
-  </div>
+    <div class="control-panel">
+        <div class="input-group">
+            <label class="input-label">분석 대상 영화 (필수)</label>
+            <input type="text" id="movieTitle" 
+                   placeholder="사용자가 감명깊게 본 영화, 연관 작품을 추천받고 싶은 영화 제목을 작성해주십시오">
+        </div>
 
-  <div class="results">
-    <!-- analysis is hidden intentionally -->
-    <div class="analysis-box">
-      <div class="analysis-title">분석 결과</div>
-      <div id="analysisText"></div>
+        <div class="input-group">
+            <label class="input-label">상세 요청 사항 (선택)</label>
+            <textarea id="userDetail" rows="3" 
+                      placeholder="예시 : 이 영화와 비슷한 '장르'를 추천해줘, 이 영화의 '배우가 비슷한 역할'로 나오는 작품을 추천해줘, 이 영화와 '비슷한 분위기'의 작품을 추천해줘"></textarea>
+        </div>
+
+        <button class="analyze-btn" onclick="onRunAIButtonClicked()">분석 및 추천 시작</button>
     </div>
 
-    <div id="recommendations-area">
-      <div class="tabs" id="tabsList"></div>
-      <div class="load-more">
-        <button id="loadMoreBtn" onclick="onLoadMore()">더 많은 추천 (3개 추가)</button>
-      </div>
+    <div class="results-panel">
+        <div class="section-header">분석 결과 리포트</div>
+        <div id="output-container">
+            <div class="status-msg">
+                영화 제목을 입력하고 분석 버튼을 눌러주세요.<br>
+                AI가 플롯, 장르, 스타일을 심층 분석하여 추천합니다.
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
-<div id="modalRoot" style="display:none"></div>
-
 <script>
-const AI_URL = '/ai';
+    /**
+     * [설정] API 서버 주소 상수
+     */
+    const BACKEND_BASE_URL = "https://c3fc9cb9-cce9-445c-963d-c1c1ea48a69e-00-h6rqi5pdnpvp.sisko.replit.dev:8000"; 
+    const AI_URL = BACKEND_BASE_URL + "/ai";
 
-async function callAIJSON(inputs){
-  try{
-    const r = await fetch(AI_URL, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({inputs})
-    });
-    const j = await r.json();
-    return j;
-  }catch(e){
-    return {analysis: `[통신 오류] ${e.message}`, recommendations: []};
-  }
-}
+    /**
+     * [핵심 기능] AI 백엔드에 요청을 보내고 응답을 받는 통신 함수
+     * @param {object} inputs - 백엔드에 보낼 사용자 입력값 객체
+     * @returns {Promise<string>} - AI 응답 텍스트 (answer) 또는 통신 오류 메시지
+     */
+    async function callAI(inputs) {
+        try {
+            const response = await fetch(AI_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ inputs: inputs }) // 통신 규격 준수: { "inputs": { ... } }
+            });
 
-function collectInputsFromPage(){
-  return { movieTitle: document.getElementById('movieTitle').value.trim(), userDetail: document.getElementById('userDetail').value.trim() };
-}
+            if (!response.ok) {
+                // HTTP 상태 코드가 200-299 범위가 아닌 경우
+                return `[통신 오류] 서버 응답 오류: 상태 코드 ${response.status} (${response.statusText})`;
+            }
 
-let allRecommendations = [];
-let displayedCount = 0;
-let analysisText = '';
+            const result = await response.json();
+            
+            // 통신 규격 준수: 응답 body에서 "answer" 키의 값을 반환
+            if (result && result.answer) {
+                return result.answer; 
+            } else {
+                return `[통신 오류] 서버 응답 JSON 형식 오류: 'answer' 키가 누락되었거나 형식이 잘못됨.`;
+            }
 
-function resetUI(){
-  document.getElementById('tabsList').innerHTML='';
-  allRecommendations = [];
-  displayedCount = 0;
-  document.getElementById('loadMoreBtn').disabled = true;
-  // hide modal if any
-  closeModal();
-}
-
-async function onRunAIButtonClicked(){
-  const inputs = collectInputsFromPage();
-  if(!inputs.movieTitle){ alert('분석할 영화 제목을 입력해주세요.'); return; }
-
-  resetUI();
-  // Call backend (expects JSON with analysis + recommendations)
-  const resp = await callAIJSON(inputs);
-
-  // Use JSON fields (analysis + recommendations)
-  analysisText = resp.analysis || '';
-  const recs = resp.recommendations && Array.isArray(resp.recommendations) ? resp.recommendations : [];
-
-  // Save
-  allRecommendations = recs.slice(0, 11); // limit 11
-  displayedCount = Math.min(5, allRecommendations.length);
-  renderTabs(displayedCount);
-  updateLoadMoreState();
-}
-
-// Render tabs
-function renderTabs(count){
-  const tabsEl = document.getElementById('tabsList'); tabsEl.innerHTML='';
-  for(let i=0;i<count;i++){
-    const item = allRecommendations[i];
-    const tab = document.createElement('button');
-    tab.className='tab';
-    tab.setAttribute('data-idx', i);
-
-    const meta = document.createElement('div'); meta.className='meta';
-    const t = document.createElement('div'); t.className='t'; t.textContent = `${item.title} (${item.year}) — ${item.director}`;
-    const s = document.createElement('div'); s.className='s'; s.textContent = (item.reason || '').slice(0,80);
-    meta.appendChild(t); meta.appendChild(s);
-
-    const matchWrap = document.createElement('div'); matchWrap.className='match';
-    const num = document.createElement('div'); num.textContent = (item.match||0) + '%';
-    const g = document.createElement('div'); g.className='gauge';
-    const inner = document.createElement('i'); inner.style.width = (Math.min(100, item.match||0)) + '%';
-    g.appendChild(inner);
-    matchWrap.appendChild(num); matchWrap.appendChild(g);
-
-    tab.appendChild(meta); tab.appendChild(matchWrap);
-    tab.addEventListener('click', ()=>openModal(parseInt(tab.getAttribute('data-idx'))));
-    tabsEl.appendChild(tab);
-  }
-}
-
-// Load more logic
-function updateLoadMoreState(){
-  const btn = document.getElementById('loadMoreBtn');
-  if(displayedCount >= Math.min(allRecommendations.length, 11)){
-    btn.disabled = true; btn.textContent = '더 이상 없음 (최대 11개)';
-  } else {
-    btn.disabled = false; btn.textContent = '더 많은 추천 (3개 추가)';
-  }
-}
-function onLoadMore(){
-  const remaining = Math.min(allRecommendations.length,11) - displayedCount;
-  if(remaining <= 0) return;
-  const add = Math.min(3, remaining);
-  displayedCount += add;
-  renderTabs(displayedCount);
-  updateLoadMoreState();
-}
-
-// modal
-function openModal(idx){
-  const item = allRecommendations[idx];
-  const root = document.getElementById('modalRoot'); root.style.display='block'; root.innerHTML='';
-  const backdrop = document.createElement('div'); backdrop.className='modal-backdrop';
-  const modal = document.createElement('div'); modal.className='modal';
-
-  const header = document.createElement('div'); header.className='modal-header';
-  const h = document.createElement('h3'); h.textContent = `${item.title} (${item.year}) — ${item.director}`;
-  const closeBtn = document.createElement('button'); closeBtn.className='sec-btn'; closeBtn.textContent='닫기'; closeBtn.onclick = ()=>closeModal();
-  header.appendChild(h); header.appendChild(closeBtn);
-
-  const sections = document.createElement('div'); sections.className='sections';
-  const secList = ['줄거리','추천 이유','평론/시청자'];
-  let activeSec = 0;
-  secList.forEach((s,i)=>{
-    const b = document.createElement('button'); b.className='sec-btn'+(i===0?' active':''); b.textContent = s;
-    b.onclick = ()=>{ Array.from(sections.children).forEach(ch=>ch.classList.remove('active')); b.classList.add('active'); activeSec = i; renderSection(); };
-    sections.appendChild(b);
-  });
-
-  const contentWrap = document.createElement('div'); contentWrap.className='modal-content';
-
-  function renderSection(){
-    contentWrap.innerHTML = '';
-    if(activeSec===0){
-      const sp = document.createElement('div'); sp.className='spoiler';
-      const p = document.createElement('p'); p.textContent = item.plot || '줄거리 없음';
-      const cover = document.createElement('div'); cover.className='cover'; cover.textContent='모자이크 처리된 줄거리 — 클릭하면 공개';
-      cover.onclick = ()=>{ sp.classList.add('revealed'); };
-      sp.appendChild(p); sp.appendChild(cover); contentWrap.appendChild(sp);
-    } else if(activeSec===1){
-      const box = document.createElement('div'); box.className='analysis-box';
-      const lbl = document.createElement('div'); lbl.className='analysis-title'; lbl.textContent='추천 이유';
-      const txt = document.createElement('div'); txt.className='analysis-text'; txt.textContent = item.reason || '이유 없음';
-      box.appendChild(lbl); box.appendChild(txt); contentWrap.appendChild(box);
-    } else {
-      const box = document.createElement('div'); box.className='analysis-box';
-      const lbl = document.createElement('div'); lbl.className='analysis-title'; lbl.textContent='비평가/시청자';
-      const txt = document.createElement('div'); txt.className='analysis-text'; txt.textContent = (item.critics||'') + '\n\n' + (item.audience||'');
-      box.appendChild(lbl); box.appendChild(txt); contentWrap.appendChild(box);
+        } catch (error) {
+            // 네트워크 오류, CORS 문제 등 fetch 자체의 문제 발생 시
+            console.error("Fetch Error:", error);
+            return `[통신 오류] 네트워크 연결 또는 CORS 문제 발생: ${error.message}`;
+        }
     }
-  }
 
-  renderSection();
+    /**
+     * [핵심 기능] HTML 페이지에서 사용자 입력값을 수집하여 객체로 반환
+     * @returns {object} - 사용자 입력값 객체
+     */
+    function collectInputsFromPage() {
+        const movieTitleInput = document.getElementById('movieTitle');
+        const userDetailTextarea = document.getElementById('userDetail');
+        
+        const inputs = {
+            movieTitle: movieTitleInput ? movieTitleInput.value.trim() : "",
+            userDetail: userDetailTextarea ? userDetailTextarea.value.trim() : ""
+        };
+        
+        return inputs;
+    }
 
-  modal.appendChild(header); modal.appendChild(sections); modal.appendChild(contentWrap);
-  backdrop.appendChild(modal);
-  backdrop.onclick = (e)=>{ if(e.target===backdrop) closeModal(); };
-  root.appendChild(backdrop);
-}
+    /**
+     * [핵심 기능] 분석 버튼 클릭 시 실행되는 메인 로직
+     */
+    async function onRunAIButtonClicked() {
+        const titleInput = document.getElementById('movieTitle');
+        const outputContainer = document.getElementById('output-container');
 
-function closeModal(){ const root = document.getElementById('modalRoot'); root.style.display='none'; root.innerHTML=''; }
+        // 1. 유효성 검사
+        if (!titleInput.value.trim()) {
+            console.error("분석할 영화 제목을 입력해주세요.");
+            outputContainer.innerHTML = '<div class="status-msg" style="color: var(--accent-secondary);">⚠️ 분석할 영화 제목을 입력해주세요.</div>';
+            return;
+        }
 
-// 초기화
-(function(){
-  // hide analysis box completely (already via CSS)
-  resetUI();
-})();
+        // 2. 로딩 상태 UI 표시 (모던 스피너 적용)
+        outputContainer.innerHTML = `
+            <div class="status-msg" style="color: var(--accent-primary); display: flex; flex-direction: column; align-items: center;">
+                <div class="spinner-ring"></div>
+                데이터 처리 중...<br>AI 백엔드로 요청 전송 및 분석 중...
+            </div>
+        `;
+
+        // 3. 입력값 수집 및 AI 호출
+        const inputs = collectInputsFromPage();
+        const aiAnswer = await callAI(inputs);
+
+        // 4. 결과 표시
+        // AI의 결과 answer를 HTML의 출력 영역(output-container)에 표시합니다.
+        outputContainer.innerHTML = `
+            <div class="section-header">AI 분석 결과</div>
+            <div style="background-color: #fff; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <pre style="white-space: pre-wrap; word-wrap: break-word; font-family: var(--font-main); font-size: 15px; color: var(--text-main); line-height: 1.6; margin: 0;">${aiAnswer}</pre>
+            </div>
+        `;
+        
+        // 기존 데모 로직: register() 함수가 더 이상 필요 없으므로 제거하고, 
+        // 새로운 onRunAIButtonClicked() 함수 내에 AI 통신 로직을 통합했습니다.
+    }
+
+
+    /* ================================================================================
+    * NOTE: 
+    * 기존의 데모 관련 함수 (MOCK_DATA, renderList, updateLoadMoreButton, 
+    * loadMore, showDetail, toggleContent)는 더 이상 AI 통신 로직과 맞지 않거나
+    * onRunAIButtonClicked()에서 호출되지 않으므로 모두 제거했습니다. 
+    * * 대신, AI가 생성한 'answer' 문자열을 <div id="output-container">에 
+    * 그대로 출력하는 간결한 방식으로 대체되었습니다.
+    ================================================================================
+    */
+    
 </script>
+
 </body>
 </html>
+
