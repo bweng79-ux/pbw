@@ -1,689 +1,179 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>AI 시네마 매치업 엔진</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎬 영화 추천 AI</title>
 
-    <style>
-        :root{
-            --bg:#f0f2f5;
-            --container:#fff;
-            --card:#f8f9fa;
-            --primary:#0056b3;
-            --accent:#d63384;
-            --muted:#6c757d;
-            --text:#212529;
-            --border:#dee2e6;
-            --shadow:0 6px 18px rgba(0,0,0,0.06);
-            --font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-        }
-        *{box-sizing:border-box;margin:0;padding:0}
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
 
-        body{
-            font-family:var(--font);
-            background:var(--bg);
-            color:var(--text);
-            display:flex;
-            justify-content:center;
-            min-height:100vh;
-            padding:30px 20px;
-        }
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+    }
 
-        .container{
-            width:100%;
-            max-width:980px;
-            background:var(--container);
-            border-radius:12px;
-            box-shadow:var(--shadow);
-            border:1px solid var(--border);
-            overflow:hidden;
-        }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
 
-        header{
-            padding:24px;
-            border-bottom:1px solid var(--border);
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-        }
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      background: #222;
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 8px;
+      resize: none;
+    }
 
-        .title{font-weight:800;font-size:22px}
-        .subtitle{font-size:13px;color:var(--muted)}
-        .badge{
-            background:var(--primary);
-            color:#fff;
-            padding:6px 12px;
-            border-radius:18px;
-            font-weight:700;
-            font-size:12px;
-        }
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 16px;
+      background: #ff3c3c;
+      color: #fff;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
-        .controls{
-            padding:24px;
-            background:#fff;
-            display:flex;
-            gap:16px;
-            flex-wrap:wrap;
-        }
+    button:hover {
+      background: #ff5555;
+    }
 
-        .col{flex:1;min-width:220px}
-        .label{
-            font-size:13px;
-            color:var(--primary);
-            font-weight:700;
-            margin-bottom:8px;
-            display:block;
-        }
+    .result-box {
+      background: #1a1a1a;
+      padding: 20px;
+      margin-top: 30px;
+      border-radius: 12px;
+    }
 
-        input, textarea{
-            width:100%;
-            padding:12px;
-            border-radius:8px;
-            border:1px solid var(--border);
-            background:var(--card);
-            font-size:15px;
-        }
+    .summary {
+      font-size: 18px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+      white-space: pre-line;
+    }
 
-        .btn{
-            background:var(--primary);
-            color:#fff;
-            padding:12px 18px;
-            border-radius:8px;
-            border:none;
-            font-weight:800;
-            cursor:pointer;
-        }
+    .movie-card {
+      background: #222;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border-left: 4px solid #ff3c3c;
+    }
 
-        .results{
-            padding:24px;
-            background:var(--card);
-            border-top:1px solid var(--border);
-        }
+    .movie-card h3 {
+      margin: 0;
+      font-size: 22px;
+      color: #ff4d4d;
+    }
 
-        .section-title{
-            font-weight:800;
-            margin-bottom:14px;
-            display:flex;
-            align-items:center;
-            gap:8px;
-        }
+    .movie-info {
+      font-size: 14px;
+      color: #ccc;
+      margin-top: 6px;
+    }
 
-        .summary-card{
-            background:#fff;
-            padding:20px;
-            border-radius:10px;
-            border:1px solid var(--border);
-            margin-bottom:18px;
-        }
-
-        .summary-text{
-            white-space:pre-wrap;
-            line-height:1.6;
-            font-size:15px;
-            color:var(--text);
-        }
-
-        /* 추천 영화 리스트 */
-        .recommend-list{
-            display:flex;
-            flex-direction:column;
-            gap:10px;
-        }
-
-        .rec-row{
-            display:flex;
-            gap:10px;
-            align-items:center;
-            background:#fff;
-            padding:12px;
-            border-radius:10px;
-            border:1px solid var(--border);
-            cursor:pointer;
-        }
-
-        .rec-left{
-            display:flex;
-            gap:12px;
-            align-items:center;
-            flex:1;
-        }
-
-        .rec-rank{
-            background:var(--primary);
-            color:#fff;
-            width:36px;
-            height:36px;
-            border-radius:8px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-weight:800;
-        }
-
-        .rec-info{min-width:0}
-        .rec-title{
-            font-weight:800;
-            font-size:15px;
-            white-space:nowrap;
-            overflow:hidden;
-            text-overflow:ellipsis;
-        }
-
-        .rec-sub{
-            font-size:13px;
-            color:var(--muted);
-            margin-top:4px;
-        }
-
-        .rec-match{
-            width:150px;
-            text-align:right;
-            flex-shrink:0;
-        }
-
-        .match-num{
-            font-weight:800;
-            font-size:14px;
-            margin-bottom:6px;
-        }
-
-        .match-bar{
-            height:8px;
-            background:#e9ecef;
-            border-radius:8px;
-            overflow:hidden;
-        }
-
-        .match-fill{
-            height:100%;
-            background:linear-gradient(90deg,var(--primary),var(--accent));
-            width:0%;
-            transition:width 0.6s ease;
-        }
-
-        .more-btn{
-            margin-top:12px;
-            padding:10px;
-            border-radius:8px;
-            border:2px solid var(--primary);
-            background:transparent;
-            color:var(--primary);
-            font-weight:800;
-            cursor:pointer;
-        }
-
-        .more-btn:disabled{
-            opacity:0.5;
-            cursor:default;
-        }
-
-        /* 모달 */
-        .modal-backdrop{
-            position:fixed;
-            inset:0;
-            background:rgba(0,0,0,0.5);
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            z-index:1000;
-        }
-
-        .modal{
-            width:92%;
-            max-width:760px;
-            background:#fff;
-            border-radius:12px;
-            padding:18px;
-            border:1px solid var(--border);
-            box-shadow:var(--shadow);
-        }
-
-        .modal-header{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-bottom:12px;
-        }
-
-        .modal-title{font-weight:900}
-
-        .modal-tabs{
-            display:flex;
-            gap:8px;
-            margin-bottom:12px;
-            flex-wrap:wrap;
-        }
-
-        .tab-btn{
-            padding:8px 12px;
-            border-radius:8px;
-            border:1px solid var(--border);
-            background:var(--card);
-            cursor:pointer;
-            font-weight:700;
-        }
-
-        .tab-btn.active{
-            background:linear-gradient(90deg,var(--primary),var(--accent));
-            color:#fff;
-            border:none;
-        }
-
-        .modal-content{
-            background:#fff;
-            padding:12px;
-            border-radius:8px;
-            border:1px solid var(--border);
-            min-height:100px;
-            white-space:pre-wrap;
-            line-height:1.6;
-        }
-
-        .blind{
-            filter:blur(9px);
-            position:relative;
-        }
-
-        .reveal-btn{
-            position:absolute;
-            right:12px;
-            top:12px;
-            background:rgba(0,0,0,0.6);
-            color:#fff;
-            padding:6px 10px;
-            border-radius:8px;
-            cursor:pointer;
-            font-size:13px;
-        }
-
-        @media(max-width:700px){
-            .controls{flex-direction:column}
-            .rec-match{width:120px}
-        }
-    </style>
+    .movie-desc {
+      margin-top: 10px;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <h1>🎬 영화 추천 AI</h1>
 
-<div class="container">
+    <label>영화 제목 입력:</label>
+    <input id="movieTitle" placeholder="예: 올드보이" />
 
-    <header>
-        <div>
-            <div class="title">AI 기반 연관 영화 작품 추천 시스템</div>
-            <div class="subtitle">AI MATCHUP ENGINE</div>
-        </div>
-        <div class="badge">System Ready</div>
-    </header>
+    <label style="margin-top:20px;">추가 요청 (선택):</label>
+    <textarea id="userDetail" placeholder="더 원하거나 추가 요청을 입력하세요"></textarea>
 
-    <div class="controls">
-        <div class="col">
-            <label class="label">분석 대상 영화 (필수)</label>
-            <input id="movieTitle" type="text" placeholder="추천받고 싶은 영화 제목을 입력해 주세요" />
-        </div>
-        <div class="col">
-            <label class="label">상세 요청 사항 (선택)</label>
-            <textarea id="userDetail" rows="3" placeholder="예: 비슷한 분위기, 같은 배우 작품 등"></textarea>
-        </div>
-        <div style="min-width:160px;display:flex;align-items:flex-end">
-            <button class="btn" onclick="onRunAIButtonClicked()">분석 및 추천 시작</button>
-        </div>
-    </div>
+    <button onclick="sendToAI()">AI 분석 요청</button>
 
-    <div class="results">
-        <div class="section-title">분석 결과 리포트</div>
+    <div id="output" class="result-box" style="display:none;"></div>
+  </div>
 
-        <div id="output-area">
-            <div style="text-align:center;color:var(--muted);padding:20px;">
-                영화 제목을 입력하고 '분석 및 추천 시작'을 눌러주세요.<br/>
-                AI가 분석 후 추천을 제공합니다.
+  <script>
+    function safeJSONParse(text) {
+      // 1) 코드블록 제거
+      text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+
+      // 2) JSON만 추출
+      const match = text.match(/\{[\s\S]*\}/);
+      if (!match) return null;
+
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        return null;
+      }
+    }
+
+    async function sendToAI() {
+      const movieTitle = document.getElementById("movieTitle").value;
+      const userDetail = document.getElementById("userDetail").value;
+
+      const response = await fetch("http://localhost:8000/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inputs: { movieTitle, userDetail }
+        }),
+      });
+
+      const data = await response.json();
+
+      let answer = data.answer;
+
+      // 혹시 문자열로 왔을 경우 재파싱
+      if (typeof answer === "string") {
+        const reparsed = safeJSONParse(answer);
+        if (reparsed) answer = reparsed;
+      }
+
+      const output = document.getElementById("output");
+      output.style.display = "block";
+
+      // summary 출력
+      let html = `<div class="summary">${answer.summary || "요약 없음"}</div>`;
+
+      // 카드 UI 출력
+      if (Array.isArray(answer.recommendations)) {
+        answer.recommendations.forEach((m) => {
+          html += `
+            <div class="movie-card">
+              <h3>${m.title}</h3>
+              <div class="movie-info">
+                감독: ${m.director} | 연도: ${m.year} | 점수: ${m.match_score}
+              </div>
+              <div class="movie-desc">
+                📌 줄거리: ${m.synopsis}<br>
+                🔥 유사한 이유: ${m.similar_reason}<br>
+                ⭐ 리뷰: ${m.reviews}
+              </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<script>
-/* ===========================
-   백엔드 API URL
-=========================== */
-const BACKEND_BASE_URL =
- "https://c3fc9cb9-cce9-445c-963d-c1c1ea48a69e-00-h6rqi5pdnpvp.sisko.replit.dev:8000";
-
-const AI_URL = BACKEND_BASE_URL + "/ai";
-
-
-/* ===========================
-   백엔드 호출
-=========================== */
-async function callAI(inputs){
-    try{
-        const res = await fetch(AI_URL,{
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({inputs})
+          `;
         });
+      }
 
-        if(!res.ok){
-            return { summary:`[통신 오류] ${res.status}`, recommendations:[] };
-        }
-
-        const json = await res.json();
-
-        // answer가 object면 그대로 반환
-        if(json && typeof json.answer === "object" && json.answer !== null){
-            return json.answer;
-        }
-
-        // answer가 string이면 JSON 파싱 시도
-        if(typeof json.answer === "string"){
-            try{
-                return JSON.parse(json.answer);
-            }catch(e){
-                return { summary: json.answer, recommendations:[] };
-            }
-        }
-
-        return { summary: "[응답 오류]", recommendations:[] };
-
-    }catch(err){
-        return { summary:`[통신 오류] ${err.message}`, recommendations:[] };
+      output.innerHTML = html;
     }
-}
-
-/* ===========================
-   UI 생성 파트
-=========================== */
-
-let loadMoreCount = 0;
-const MAX_MORE = 2;
-
-function createSummaryBlock(text){
-    const wrap = document.createElement("div");
-    wrap.className = "summary-card";
-    const p = document.createElement("div");
-    p.className = "summary-text";
-    p.textContent = text;
-    wrap.appendChild(p);
-    return wrap;
-}
-
-function createRecRow(movie, index){
-    const row = document.createElement("div");
-    row.className = "rec-row";
-
-    const left = document.createElement("div");
-    left.className = "rec-left";
-
-    const rank = document.createElement("div");
-    rank.className = "rec-rank";
-    rank.textContent = index+1;
-
-    const info = document.createElement("div");
-    info.className = "rec-info";
-
-    const title = document.createElement("div");
-    title.className = "rec-title";
-    title.textContent = movie.title || "제목 없음";
-
-    const sub = document.createElement("div");
-    sub.className = "rec-sub";
-    sub.textContent = `${movie.director || "감독 정보 없음"} · ${movie.year || ""}`;
-
-    info.appendChild(title);
-    info.appendChild(sub);
-
-    left.appendChild(rank);
-    left.appendChild(info);
-
-    const match = document.createElement("div");
-    match.className = "rec-match";
-
-    const num = document.createElement("div");
-    num.className = "match-num";
-    num.textContent = `${movie.match_score}%`;
-
-    const bar = document.createElement("div");
-    bar.className = "match-bar";
-
-    const fill = document.createElement("div");
-    fill.className = "match-fill";
-
-    setTimeout(()=>{
-        fill.style.width = `${Math.min(100, movie.match_score)}%`;
-    },50);
-
-    bar.appendChild(fill);
-
-    match.appendChild(num);
-    match.appendChild(bar);
-
-    row.appendChild(left);
-    row.appendChild(match);
-
-    row.addEventListener("click",()=> openRecModal(movie));
-
-    return row;
-}
-
-
-function renderRecommendations(list, baseCount = 5){
-    const wrap = document.createElement("div");
-    wrap.className = "recommend-list";
-
-    const showCount = Math.min(list.length, baseCount + loadMoreCount*3);
-
-    for(let i=0;i<showCount;i++){
-        wrap.appendChild(createRecRow(list[i], i));
-    }
-
-    const moreBtn = document.createElement("button");
-    moreBtn.className = "more-btn";
-
-    if(loadMoreCount >= MAX_MORE || showCount >= list.length){
-        moreBtn.disabled = true;
-        moreBtn.textContent = "더 이상 추천 없음";
-    } else {
-        moreBtn.textContent = "더 많은 추천 (3개 추가)";
-        moreBtn.addEventListener("click",()=>{
-            loadMoreCount++;
-            const output = document.getElementById("output-area");
-            renderFullOutput(output._lastData);
-        });
-    }
-
-    const container = document.createElement("div");
-    container.appendChild(wrap);
-    container.appendChild(moreBtn);
-
-    return container;
-}
-
-
-function renderFullOutput(data){
-    const output = document.getElementById("output-area");
-    output.innerHTML = "";
-    output._lastData = data;
-
-    // summary
-    output.appendChild(createSummaryBlock(data.summary));
-
-    // section header
-    const h = document.createElement("div");
-    h.className = "section-title";
-    h.textContent = "추천 영화";
-    output.appendChild(h);
-
-    output.appendChild(renderRecommendations(data.recommendations));
-}
-
-
-/* ===========================
-   모달 작성
-=========================== */
-
-function openRecModal(movie){
-    const back = document.createElement("div");
-    back.className = "modal-backdrop";
-
-    const modal = document.createElement("div");
-    modal.className = "modal";
-
-    const header = document.createElement("div");
-    header.className = "modal-header";
-
-    const t = document.createElement("div");
-    t.className = "modal-title";
-    t.textContent = `${movie.title || ""} · ${movie.year || ""}`;
-
-    const close = document.createElement("button");
-    close.className = "btn";
-    close.style.padding = "6px 10px";
-    close.textContent = "닫기";
-    close.addEventListener("click",()=> document.body.removeChild(back));
-
-    header.appendChild(t);
-    header.appendChild(close);
-
-    const tabs = document.createElement("div");
-    tabs.className = "modal-tabs";
-
-    const tabNames = ["줄거리", "추천 이유", "평론/시청자 평가"];
-
-    const cWrap = [];
-    const c1 = document.createElement("div");
-    c1.className = "modal-content";
-    const blindWrap = document.createElement("div");
-    blindWrap.style.position = "relative";
-
-    const synopsis = document.createElement("div");
-    synopsis.className = "blind";
-    synopsis.style.padding = "10px";
-    synopsis.textContent = movie.synopsis || "줄거리 없음";
-
-    const reveal = document.createElement("div");
-    reveal.className = "reveal-btn";
-    reveal.textContent = "보기";
-    reveal.addEventListener("click",()=>{
-        synopsis.classList.remove("blind");
-        reveal.style.display = "none";
-    });
-
-    blindWrap.appendChild(synopsis);
-    blindWrap.appendChild(reveal);
-    c1.appendChild(blindWrap);
-
-
-    const c2 = document.createElement("div");
-    c2.className = "modal-content";
-    c2.style.display="none";
-    c2.textContent = movie.similar_reason || "추천 이유 없음";
-
-
-    const c3 = document.createElement("div");
-    c3.className = "modal-content";
-    c3.style.display="none";
-    c3.textContent = movie.reviews || "평론/시청자 평가 없음";
-
-
-    cWrap.push(c1,c2,c3);
-
-    tabNames.forEach((name, i)=>{
-        const btn = document.createElement("button");
-        btn.className = "tab-btn";
-        if(i===0) btn.classList.add("active");
-        btn.textContent = name;
-
-        btn.addEventListener("click",()=>{
-            tabs.querySelectorAll(".tab-btn").forEach(b=> b.classList.remove("active"));
-            btn.classList.add("active");
-
-            cWrap.forEach((c,j)=> c.style.display = (j===i?"block":"none"));
-        });
-
-        tabs.appendChild(btn);
-    });
-
-    modal.appendChild(header);
-    modal.appendChild(tabs);
-    modal.appendChild(c1);
-    modal.appendChild(c2);
-    modal.appendChild(c3);
-
-    back.appendChild(modal);
-    document.body.appendChild(back);
-
-    back.addEventListener("click",(ev)=>{
-        if(ev.target === back){
-            document.body.removeChild(back);
-        }
-    });
-}
-
-
-/* ===========================
-   버튼 실행
-=========================== */
-async function onRunAIButtonClicked(){
-    const title = document.getElementById("movieTitle").value.trim();
-    const detail = document.getElementById("userDetail").value.trim();
-
-    const output = document.getElementById("output-area");
-
-    if(!title){
-        output.innerHTML = `<div style="color:red;padding:12px;font-weight:800;">
-            ⚠️ 분석할 영화 제목을 입력해주세요.
-        </div>`;
-        return;
-    }
-
-    output.innerHTML = `
-        <div style="text-align:center;padding:30px;color:var(--muted);">
-            <div style="width:40px;height:40px;border:4px solid rgba(0,86,179,0.2);
-                        border-top:4px solid var(--primary);
-                        border-radius:50%;
-                        margin:auto;
-                        animation:spin 0.8s linear infinite;"></div>
-            <div style="margin-top:12px;">AI 분석 중입니다...</div>
-        </div>
-    `;
-
-    const data = await callAI({
-        movieTitle: title,
-        userDetail: detail
-    });
-
-    if(!data || !data.summary){
-        output.innerHTML = `<div style="color:red;padding:12px;">AI 응답 오류</div>`;
-        return;
-    }
-
-    // match_score 항상 숫자 보정
-    if(Array.isArray(data.recommendations)){
-        data.recommendations = data.recommendations.map(r=>{
-            if(typeof r.match_score !== "number"){
-                const m = parseInt(r.match_score);
-                r.match_score = isNaN(m) ? 0 : m;
-            }
-            return r;
-        });
-    }else{
-        data.recommendations = [];
-    }
-
-    loadMoreCount = 0;
-    renderFullOutput(data);
-}
-
-
-/* ===========================
-   spin animation
-=========================== */
-const sp = document.createElement("style");
-sp.innerHTML = `@keyframes spin{
-    0%{transform:rotate(0deg);}
-    100%{transform:rotate(360deg);}
-}`;
-document.head.appendChild(sp);
-
-</script>
+  </script>
 </body>
 </html>
