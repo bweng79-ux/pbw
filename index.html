@@ -1,260 +1,467 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>AI 시네마 매치업 엔진</title>
     <style>
-        :root {
-            --bg-color: #f0f2f5; 
-            --container-bg: #ffffff; 
-            --card-bg: #f8f9fa; 
-            --accent-primary: #0056b3; 
-            --accent-secondary: #d63384; 
-            --text-main: #212529; 
-            --text-muted: #6c757d; 
-            --border-color: #dee2e6;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-            --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            --panel-bg: #f0f4f8;
-            --panel-accent: #3b82f6;
-            --panel-text: #344458;
-            --spoiler-bg: #ffffff;
-            --spoiler-border: #ef4444;
-            --review-border: #3b82f6;
+        :root{
+            --bg:#f0f2f5;
+            --container:#fff;
+            --card:#f8f9fa;
+            --primary:#0056b3;
+            --accent:#d63384;
+            --muted:#6c757d;
+            --text:#212529;
+            --border:#dee2e6;
+            --shadow:0 4px 6px rgba(0,0,0,0.08);
+            --font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{
+            font-family:var(--font);
+            background:var(--bg);
+            color:var(--text);
+            display:flex;
+            justify-content:center;
+            min-height:100vh;
+            padding:30px 20px;
+        }
+        .container{
+            width:100%;
+            max-width:980px;
+            background:var(--container);
+            border-radius:12px;
+            box-shadow:var(--shadow);
+            border:1px solid var(--border);
+            overflow:hidden;
+        }
+        header{padding:24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .title{font-weight:800;font-size:22px}
+        .subtitle{font-size:13px;color:var(--muted)}
+        .badge{background:var(--primary);color:#fff;padding:6px 12px;border-radius:18px;font-weight:700;font-size:12px}
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .controls{padding:24px;background:#fff;display:flex;gap:16px;flex-wrap:wrap}
+        .col{flex:1;min-width:220px}
+        .label{font-size:13px;color:var(--primary);font-weight:700;margin-bottom:8px;display:block}
+        input[type="text"], textarea{
+            width:100%;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--card);
+            font-size:15px;
+        }
+        .btn{background:var(--primary);color:#fff;padding:12px 18px;border-radius:8px;border:none;font-weight:800;cursor:pointer}
+        .results{padding:24px;background:var(--card);border-top:1px solid var(--border)}
+        .section-title{font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+        .summary-card{background:#fff;padding:20px;border-radius:10px;border:1px solid var(--border);margin-bottom:18px}
+        .summary-text{white-space:pre-wrap;line-height:1.6;font-size:15px;color:var(--text)}
 
-        body {
-            font-family: var(--font-main);
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
+        /* recommendation list */
+        .recommend-list{display:flex;flex-direction:column;gap:10px}
+        .rec-row{display:flex;gap:10px;align-items:center;background:#fff;padding:12px;border-radius:10px;border:1px solid var(--border);cursor:pointer}
+        .rec-left{display:flex;gap:12px;align-items:center;flex:1}
+        .rec-rank{background:var(--primary);color:#fff;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800}
+        .rec-info{min-width:0}
+        .rec-title{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .rec-sub{font-size:13px;color:var(--muted);margin-top:4px}
+        .rec-match{width:150px;text-align:right;flex-shrink:0}
 
-        .broadcast-container {
-            width: 100%;
-            max-width: 900px;
-            background: var(--container-bg);
-            border-radius: 12px;
-            box-shadow: var(--shadow-md);
-            position: relative;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
+        .match-num{font-weight:800;font-size:14px;margin-bottom:6px}
+        .match-bar{height:8px;background:#e9ecef;border-radius:8px;overflow:hidden}
+        .match-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));width:0%;transition:width 0.6s ease}
 
-        .broadcast-container::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 6px;
-            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-        }
+        .more-btn{margin-top:12px;padding:10px;border-radius:8px;border:2px solid var(--primary);background:transparent;color:var(--primary);font-weight:800;cursor:pointer}
+        .more-btn:disabled{opacity:0.5;cursor:default}
 
-        header {
-            padding: 30px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #fff;
-            flex-wrap: wrap;
-        }
+        /* modal */
+        .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000}
+        .modal{width:90%;max-width:760px;background:#fff;border-radius:12px;padding:18px;border:1px solid var(--border);box-shadow:var(--shadow)}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+        .modal-title{font-weight:900}
+        .modal-tabs{display:flex;gap:8px;margin-bottom:12px}
+        .tab-btn{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-weight:700}
+        .tab-btn.active{background:linear-gradient(90deg,var(--primary),var(--accent));color:#fff;border:none}
+        .modal-content{background:#fff;padding:12px;border-radius:8px;border:1px solid var(--border)}
+        .blind{filter:blur(8px);position:relative}
+        .reveal-btn{position:absolute;right:12px;top:12px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:13px}
 
-        .header-content { display: flex; flex-direction: column; gap: 5px; }
-        .main-title { font-size: 26px; font-weight: 800; color: var(--text-main); }
-        .sub-title { font-size: 14px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
-        .sub-title span { color: var(--accent-primary); }
-
-        .live-badge {
-            background-color: var(--accent-primary);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: bold;
+        @media(max-width:700px){
+            .controls{flex-direction:column}
+            .rec-match{width:120px}
         }
-
-        .control-panel { padding: 30px; background-color: #fff; }
-
-        .input-group { margin-bottom: 25px; }
-        .input-label { display: block; font-size: 14px; color: var(--accent-primary); font-weight: 700; margin-bottom: 8px; }
-
-        input[type="text"], textarea {
-            width: 100%; background-color: #f8f9fa;
-            border: 1px solid var(--border-color);
-            padding: 15px; border-radius: 6px;
-            font-size: 16px; transition: 0.2s;
-        }
-        input:focus, textarea:focus {
-            border-color: var(--accent-primary);
-            background-color: #fff;
-            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
-        }
-
-        .analyze-btn {
-            width: 100%; background: var(--accent-primary);
-            color: white; padding: 16px;
-            border: none; border-radius: 6px;
-            font-size: 16px; font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .analyze-btn:hover { background: #004494; transform: translateY(-1px); }
-
-        .results-panel {
-            background-color: #f8f9fa;
-            padding: 30px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .section-header {
-            font-size: 16px; font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 20px;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .section-header::before {
-            content: '';
-            width: 4px; height: 16px;
-            background: var(--accent-secondary); border-radius: 2px;
-        }
-
-        .detail-view {
-            background: white; padding: 25px;
-            border-radius: 8px; box-shadow: var(--shadow-md);
-        }
-        .info-block {
-            margin-bottom: 20px; padding: 15px;
-            background: var(--card-bg); border-radius: 6px;
-            border-left: 4px solid var(--accent-primary);
-        }
-        .info-label { font-size: 14px; font-weight: 700; color: var(--accent-primary); margin-bottom: 6px; }
-        .info-text { font-size: 15px; color: var(--text-main); line-height: 1.6; }
-        .spinner-ring {
-            width: 40px; height: 40px;
-            border: 4px solid rgba(0, 86, 179, 0.2);
-            border-radius: 50%;
-            border-top-color: var(--accent-primary);
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 15px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg);} 100%{transform:rotate(360deg);} }
     </style>
 </head>
-
 <body>
-
-<div class="broadcast-container">
+<div class="container">
     <header>
-        <div class="header-content">
-            <div class="main-title">AI 기반 연관 영화 작품 추천 시스템</div>
-            <div class="sub-title">AI <span>MATCHUP</span> ENGINE</div>
+        <div>
+            <div class="title">AI 기반 연관 영화 작품 추천 시스템</div>
+            <div class="subtitle">AI MATCHUP ENGINE</div>
         </div>
-        <div class="live-badge">System Ready</div>
+        <div class="badge">System Ready</div>
     </header>
 
-    <div class="control-panel">
-        <div class="input-group">
-            <label class="input-label">분석 대상 영화 (필수)</label>
-            <input type="text" id="movieTitle" 
-                   placeholder="추천받고 싶은 영화 제목 입력">
+    <div class="controls">
+        <div class="col">
+            <label class="label">분석 대상 영화 (필수)</label>
+            <input id="movieTitle" type="text" placeholder="추천받고 싶은 영화 제목을 입력해 주세요" />
         </div>
-
-        <div class="input-group">
-            <label class="input-label">상세 요청 사항 (선택)</label>
+        <div class="col">
+            <label class="label">상세 요청 사항 (선택)</label>
             <textarea id="userDetail" rows="3" placeholder="예: 비슷한 분위기, 같은 배우 작품 등"></textarea>
         </div>
-
-        <button class="analyze-btn" onclick="onRunAIButtonClicked()">분석 및 추천 시작</button>
+        <div style="min-width:160px;display:flex;align-items:flex-end">
+            <button class="btn" onclick="onRunAIButtonClicked()">분석 및 추천 시작</button>
+        </div>
     </div>
 
-    <div class="results-panel">
-        <div class="section-header">분석 결과 리포트</div>
-        <div id="output-container">
-            <div class="status-msg" style="text-align:center;">
-                영화 제목을 입력하고 분석 버튼을 눌러주세요.<br>
-                AI가 플롯, 장르, 스타일을 심층 분석합니다.
+    <div class="results">
+        <div class="section-title">분석 결과 리포트</div>
+
+        <div id="output-area">
+            <div style="text-align:center;color:var(--muted);padding:20px;">
+                영화 제목을 입력하고 '분석 및 추천 시작'을 눌러주세요.<br/>AI가 분석 후 추천을 제공합니다.
             </div>
         </div>
     </div>
 </div>
 
 <script>
+/**
+ * 프론트는 기존 /ai endpoint 요청 방식(POST JSON)을 그대로 유지합니다.
+ * main.py가 JSON 객체를 반환하면 (answer: {summary:..., recommendations:[...]})
+ * 프론트는 객체를 사용하여 UI를 구성합니다.
+ */
+
 const BACKEND_BASE_URL = "https://c3fc9cb9-cce9-445c-963d-c1c1ea48a69e-00-h6rqi5pdnpvp.sisko.replit.dev:8000";
 const AI_URL = BACKEND_BASE_URL + "/ai";
 
-async function callAI(inputs) {
-    try {
-        const response = await fetch(AI_URL, {
+async function callAI(inputs){
+    try{
+        const res = await fetch(AI_URL, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ inputs: inputs })
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({inputs})
         });
+        if(!res.ok){
+            return { summary: `[통신 오류] 상태 코드 ${res.status}`, recommendations: [] };
+        }
+        const json = await res.json();
 
-        if (!response.ok) {
-            return `[통신 오류] 상태 코드 ${response.status}`;
+        // json.answer 은 객체일 수도 있고 문자열일 수도 있음 (호환성)
+        if (!json || typeof json.answer === "undefined") {
+            return { summary: "[응답 형식 오류] answer 키 없음", recommendations: [] };
         }
 
-        const result = await response.json();
-        return result.answer || "[형식 오류] answer 키 없음";
+        // 만약 answer가 문자열이면 시도해 파싱, 실패하면 text summary로 사용
+        if (typeof json.answer === "string") {
+            try {
+                const parsed = JSON.parse(json.answer);
+                return parsed;
+            } catch (e) {
+                return { summary: json.answer, recommendations: [] };
+            }
+        } else if (typeof json.answer === "object") {
+            return json.answer;
+        } else {
+            return { summary: "[알 수 없는 응답 형식]", recommendations: [] };
+        }
 
-    } catch (error) {
-        return `[통신 오류] ${error.message}`;
+    } catch (err) {
+        return { summary: `[통신 오류] ${err.message}`, recommendations: [] };
     }
 }
 
-function collectInputsFromPage() {
-    return {
-        movieTitle: document.getElementById("movieTitle").value.trim(),
-        userDetail: document.getElementById("userDetail").value.trim()
-    };
+let loadMoreCount = 0; // 몇 번 더보기 클릭했는지 (최대 2)
+const MAX_MORE = 2;    // 2번 클릭 가능 -> +6 추천, 기본 5 -> 총 11
+
+function createSummaryBlock(summaryText){
+    const wrap = document.createElement("div");
+    wrap.className = "summary-card";
+    const p = document.createElement("div");
+    p.className = "summary-text";
+    p.textContent = summaryText || "요약 정보가 없습니다.";
+    wrap.appendChild(p);
+    return wrap;
 }
 
-async function onRunAIButtonClicked() {
-    const movieTitle = document.getElementById("movieTitle").value.trim();
-    const outputContainer = document.getElementById("output-container");
+function createRecRow(rec, index){
+    const row = document.createElement("div");
+    row.className = "rec-row";
+    row.dataset.index = index;
 
-    if (!movieTitle) {
-        outputContainer.innerHTML = `<div class="status-msg" style="color:red;">⚠️ 영화 제목을 입력해주세요.</div>`;
+    const left = document.createElement("div");
+    left.className = "rec-left";
+
+    const rank = document.createElement("div");
+    rank.className = "rec-rank";
+    rank.textContent = index + 1;
+
+    const info = document.createElement("div");
+    info.className = "rec-info";
+
+    const title = document.createElement("div");
+    title.className = "rec-title";
+    title.textContent = `${rec.title || "제목 없음"}`;
+
+    const sub = document.createElement("div");
+    sub.className = "rec-sub";
+    sub.textContent = `${rec.director || "감독 정보 없음"} · ${rec.year || "연도 정보 없음"}`;
+
+    info.appendChild(title);
+    info.appendChild(sub);
+
+    left.appendChild(rank);
+    left.appendChild(info);
+
+    const matchWrap = document.createElement("div");
+    matchWrap.className = "rec-match";
+
+    const matchNum = document.createElement("div");
+    matchNum.className = "match-num";
+    matchNum.textContent = `${rec.match_score ?? 0}%`;
+
+    const matchBar = document.createElement("div");
+    matchBar.className = "match-bar";
+    const fill = document.createElement("div");
+    fill.className = "match-fill";
+    // animate based on match_score
+    setTimeout(()=> {
+        fill.style.width = `${Math.max(0, Math.min(100, rec.match_score || 0))}%`;
+    }, 60);
+
+    matchBar.appendChild(fill);
+    matchWrap.appendChild(matchNum);
+    matchWrap.appendChild(matchBar);
+
+    row.appendChild(left);
+    row.appendChild(matchWrap);
+
+    // 클릭 시 모달 오픈
+    row.addEventListener("click", ()=> openRecModal(rec));
+
+    return row;
+}
+
+function renderRecommendations(recs, initialCount=5){
+    const container = document.createElement("div");
+    container.className = "recommend-list";
+
+    const countToShow = Math.min(recs.length, initialCount + loadMoreCount * 3);
+    for(let i=0;i<countToShow;i++){
+        const row = createRecRow(recs[i], i);
+        container.appendChild(row);
+    }
+
+    // 더보기 버튼
+    const moreBtn = document.createElement("button");
+    moreBtn.className = "more-btn";
+    moreBtn.textContent = "더 많은 추천 (3개씩 추가)";
+    if (loadMoreCount >= MAX_MORE || countToShow >= recs.length){
+        moreBtn.disabled = true;
+        moreBtn.textContent = "더 이상 추천 없음";
+    }
+    moreBtn.addEventListener("click", ()=>{
+        if (loadMoreCount < MAX_MORE){
+            loadMoreCount++;
+            // 다시 렌더
+            const outputArea = document.getElementById("output-area");
+            // we preserve existing summary block then re-render recs
+            const current = outputArea._lastData || {summary:"", recommendations:[]};
+            renderFullOutput(current);
+        }
+    });
+
+    const wrapper = document.createElement("div");
+    wrapper.appendChild(container);
+    wrapper.appendChild(moreBtn);
+
+    return wrapper;
+}
+
+function renderFullOutput(data){
+    const output = document.getElementById("output-area");
+    output.innerHTML = "";
+
+    // 저장 for re-render
+    output._lastData = data;
+
+    // 1. summary block
+    const summaryBlock = createSummaryBlock(data.summary || "");
+    output.appendChild(summaryBlock);
+
+    // 2. recommendations header
+    const recHeader = document.createElement("div");
+    recHeader.className = "section-title";
+    recHeader.textContent = "추천 영화";
+    output.appendChild(recHeader);
+
+    // 3. recommendation list (default 5, 더보기로 확장)
+    const recsWrapper = renderRecommendations(data.recommendations || [], 5);
+    output.appendChild(recsWrapper);
+}
+
+function openRecModal(rec){
+    // modal backdrop
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+
+    const modal = document.createElement("div");
+    modal.className = "modal";
+
+    const header = document.createElement("div");
+    header.className = "modal-header";
+    const title = document.createElement("div");
+    title.className = "modal-title";
+    title.textContent = `${rec.title || "제목 없음"} · ${rec.year || ""}`;
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "btn";
+    closeBtn.textContent = "닫기";
+    closeBtn.style.padding = "6px 10px";
+    closeBtn.style.fontWeight = "700";
+    closeBtn.addEventListener("click", ()=> {
+        document.body.removeChild(backdrop);
+    });
+
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+
+    // tabs
+    const tabs = document.createElement("div");
+    tabs.className = "modal-tabs";
+    const tabNames = ["줄거리", "추천 이유", "평론/시청자 평가"];
+    const contents = [];
+
+    tabNames.forEach((n,i)=>{
+        const t = document.createElement("button");
+        t.className = "tab-btn";
+        if(i===0) t.classList.add("active");
+        t.textContent = n;
+        t.addEventListener("click", ()=>{
+            // active
+            tabs.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+            t.classList.add("active");
+            // show content
+            contents.forEach((c,j)=> c.style.display = (j===i ? "block":"none"));
+        });
+        tabs.appendChild(t);
+    });
+
+    // content boxes
+    // 1) 줄거리 (블라인드)
+    const c1 = document.createElement("div");
+    c1.className = "modal-content";
+    const blindWrap = document.createElement("div");
+    blindWrap.style.position = "relative";
+    const synopsisDiv = document.createElement("div");
+    synopsisDiv.className = "blind";
+    synopsisDiv.style.padding = "10px";
+    synopsisDiv.style.minHeight = "80px";
+    synopsisDiv.textContent = rec.synopsis || "줄거리 정보가 없습니다.";
+    const revealBtn = document.createElement("div");
+    revealBtn.className = "reveal-btn";
+    revealBtn.textContent = "보기";
+    revealBtn.addEventListener("click", (e)=>{
+        // toggle blur
+        if(synopsisDiv.classList.contains("blind")){
+            synopsisDiv.classList.remove("blind");
+            revealBtn.style.display = "none";
+        } else {
+            synopsisDiv.classList.add("blind");
+            revealBtn.style.display = "block";
+        }
+    });
+    blindWrap.appendChild(synopsisDiv);
+    blindWrap.appendChild(revealBtn);
+    c1.appendChild(blindWrap);
+
+    // 2) 추천 이유
+    const c2 = document.createElement("div");
+    c2.className = "modal-content";
+    c2.style.display = "none";
+    const reasonP = document.createElement("div");
+    reasonP.style.whiteSpace = "pre-wrap";
+    reasonP.style.lineHeight = "1.6";
+    reasonP.textContent = rec.similar_reason || "정보 없음";
+    c2.appendChild(reasonP);
+
+    // 3) 평론/시청자 평가
+    const c3 = document.createElement("div");
+    c3.className = "modal-content";
+    c3.style.display = "none";
+    const revP = document.createElement("div");
+    revP.style.whiteSpace = "pre-wrap";
+    revP.style.lineHeight = "1.6";
+    revP.textContent = rec.reviews || "정보 없음";
+    c3.appendChild(revP);
+
+    contents.push(c1,c2,c3);
+
+    modal.appendChild(header);
+    modal.appendChild(tabs);
+    modal.appendChild(c1);
+    modal.appendChild(c2);
+    modal.appendChild(c3);
+
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+
+    // 닫기: 배경 클릭 시 닫기
+    backdrop.addEventListener("click", (ev)=>{
+        if(ev.target === backdrop){
+            document.body.removeChild(backdrop);
+        }
+    });
+}
+
+// 메인 실행: 버튼 클릭 핸들러
+async function onRunAIButtonClicked(){
+    const titleEl = document.getElementById("movieTitle");
+    const output = document.getElementById("output-area");
+    const title = titleEl.value.trim();
+    if(!title){
+        output.innerHTML = `<div style="color:var(--accent);padding:12px;font-weight:800;">⚠️ 분석할 영화 제목을 입력해주세요.</div>`;
         return;
     }
 
-    outputContainer.innerHTML = `
-        <div class="status-msg" style="display:flex; flex-direction:column; align-items:center;">
-            <div class="spinner-ring"></div>
-            데이터 처리 중...<br>AI 분석 진행 중...
-        </div>
-    `;
+    // 로딩 UI
+    output.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;padding:30px;"><div style="width:40px;height:40px;border:4px solid rgba(0,86,179,0.2);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;"></div><div style="margin-top:12px;color:var(--muted)">AI 분석 중입니다...</div></div>`;
 
-    const inputs = collectInputsFromPage();
-    const aiAnswer = await callAI(inputs);
+    const inputs = {
+        movieTitle: title,
+        userDetail: document.getElementById("userDetail").value.trim()
+    };
 
-    // Markdown → HTML 변환
-    const html = aiAnswer
-        .replace(/^## (.*)$/gm, '<h2 style="margin-top:20px; font-weight:800; font-size:20px;">$1</h2>')
-        .replace(/^### (.*)$/gm, '<h3 style="margin-top:15px; font-weight:700;">$1</h3>')
-        .replace(/^- (.*)$/gm, '<li>$1</li>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\n/g, "<br>");
+    const data = await callAI(inputs);
 
-    outputContainer.innerHTML = `
-        <div class="section-header">AI 분석 결과</div>
+    // 데이터 구조 보장: summary, recommendations[]
+    if(!data || typeof data !== "object"){
+        output.innerHTML = `<div style="color:red;padding:12px;">응답 형식 오류 또는 데이터 없음</div>`;
+        return;
+    }
 
-        <div class="detail-view">
-            <div class="info-block">
-                <div class="info-label">📌 분석 및 추천 결과</div>
-                <div class="info-text">${html}</div>
-            </div>
-        </div>
-    `;
+    // 보정: recommendations가 없으면 빈 배열
+    if(!Array.isArray(data.recommendations)){
+        data.recommendations = [];
+    }
+
+    // 안전: match_score 숫자 보정
+    data.recommendations = data.recommendations.map(r=>{
+        const clone = Object.assign({}, r);
+        if(typeof clone.match_score === "string") clone.match_score = parseInt(clone.match_score.replace(/[^0-9]/g,"")) || 0;
+        if(typeof clone.match_score !== "number") clone.match_score = 0;
+        return clone;
+    });
+
+    // 렌더링
+    loadMoreCount = 0; // 리셋
+    renderFullOutput(data);
 }
-</script>
 
+// spin 애니메이션 CSS 추가 (동적으로)
+(function addSpinStyle(){
+    const s = document.createElement("style");
+    s.innerHTML = `@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}`;
+    document.head.appendChild(s);
+})();
+</script>
 </body>
 </html>
