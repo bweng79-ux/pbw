@@ -5,525 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 시네마 매치업 엔진</title>
     <style>
-        /* * DESIGN THEME: Modern Light Dashboard with High-Tech Panels (Moderated Dark Colors) */
-        :root {
-            --bg-color: #f0f2f5; 
-            --container-bg: #ffffff; 
-            --card-bg: #f8f9fa; 
-            --accent-primary: #0056b3; 
-            --accent-secondary: #d63384; 
-            --text-main: #212529; 
-            --text-muted: #6c757d; 
-            --border-color: #dee2e6;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-            --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            
-            /* High-Tech Colors (MODERATED FOR LIGHTER AESTHETIC) */
-            --panel-bg: #f0f4f8; /* Light gray-blue for container/button */
-            --panel-accent: #3b82f6; /* Blue Neon (Accent) */
-            --panel-text: #344458; /* Dark text for contrast */
-            --spoiler-bg: #ffffff; /* Pure white for content background */
-            --spoiler-border: #ef4444; /* Red for warning */
-            --review-border: #3b82f6; /* Blue for info */
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: var(--font-main);
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
-
-        /* Layout Container */
-        .broadcast-container {
-            width: 100%;
-            max-width: 900px;
-            background: var(--container-bg);
-            border-radius: 12px;
-            box-shadow: var(--shadow-md);
-            position: relative;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        .broadcast-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 6px;
-            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-        }
-
-        header {
-            padding: 30px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            background-color: #fff;
-        }
-
-        .header-content {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .main-title {
-            font-size: 26px;
-            font-weight: 800;
-            color: var(--text-main);
-            letter-spacing: -0.5px;
-        }
-
-        .sub-title {
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-        }
-
-        .sub-title span {
-            color: var(--accent-primary);
-        }
-
-        .live-badge {
-            background-color: var(--accent-primary);
-            color: white;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 6px 12px;
-            border-radius: 20px;
-            text-transform: uppercase;
-            box-shadow: 0 2px 4px rgba(0, 86, 179, 0.3);
-        }
-
-        .control-panel {
-            padding: 30px;
-            background-color: #fff;
-        }
-
-        .input-group {
-            margin-bottom: 25px;
-        }
-
-        .input-label {
-            display: block;
-            font-size: 14px;
-            color: var(--accent-primary);
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        input[type="text"], textarea {
-            width: 100%;
-            background-color: #f8f9fa;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-main);
-            padding: 15px;
-            font-size: 16px;
-            font-family: var(--font-main);
-            transition: all 0.2s ease;
-            outline: none;
-        }
-
-        input[type="text"]:focus, textarea:focus {
-            border-color: var(--accent-primary);
-            background-color: #fff;
-            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
-        }
-
-        ::placeholder {
-            color: #adb5bd;
-            font-size: 14px;
-        }
-
-        .analyze-btn {
-            width: 100%;
-            background: var(--accent-primary);
-            color: #fff;
-            border: none;
-            padding: 16px;
-            font-size: 16px;
-            font-weight: 700;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            box-shadow: 0 4px 6px rgba(0, 86, 179, 0.2);
-        }
-
-        .analyze-btn:hover {
-            background: #004494;
-            transform: translateY(-1px);
-        }
-
-        .analyze-btn:active {
-            transform: translateY(0);
-        }
-
-        .results-panel {
-            background-color: #f8f9fa;
-            padding: 30px;
-            min-height: 200px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .section-header {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .section-header::before {
-            content: '';
-            display: block;
-            width: 4px;
-            height: 16px;
-            background-color: var(--accent-secondary);
-            border-radius: 2px;
-        }
-
-        /* --- List Card Styles --- */
-        .list-card {
-            background-color: #fff;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-            cursor: pointer; 
-            transition: background-color 0.2s, transform 0.1s;
-            animation: slideIn 0.5s ease-out forwards;
-            opacity: 0;
-        }
-        
-        .list-card:hover {
-            background-color: #e9f0f6; 
-            transform: translateY(-1px);
-        }
-
-        .list-rank {
-            background-color: var(--accent-primary);
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
-            flex-shrink: 0;
-            margin-right: 15px;
-        }
-
-        .list-content {
-            flex-grow: 1;
-            min-width: 0;
-        }
-        
-        .list-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-main);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .list-reason {
-            font-size: 12px;
-            color: var(--text-muted);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 3px;
-        }
-        
-        .list-match {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--accent-secondary);
-            flex-shrink: 0;
-            margin-left: 15px;
-        }
-
-        /* --- Detail View Styles --- */
-        .detail-view-wrapper {
-            animation: fadeIn 0.4s ease-out; 
-        }
-
-        .detail-view {
-            background-color: #fff;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: var(--shadow-md);
-            margin-top: 20px;
-        }
-        
-        .detail-header {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--text-main);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .detail-badge {
-            font-size: 13px;
-            padding: 5px 10px;
-            background-color: var(--accent-secondary);
-            color: white;
-            border-radius: 4px;
-            font-weight: 700;
-        }
-
-        .info-block {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: var(--card-bg);
-            border-radius: 6px;
-            border-left: 4px solid var(--accent-primary);
-        }
-
-        .info-label {
-            font-size: 14px;
-            color: var(--accent-primary);
-            font-weight: 700;
-            margin-bottom: 6px;
-            display: block;
-        }
-
-        .info-text {
-            font-size: 15px;
-            color: var(--text-main);
-            line-height: 1.6;
-            margin: 0;
-        }
-        
-        /* --- High-Tech Panel Styles for Spoiler/Review (LIGHTER) --- */
-        .spoiler-container, .review-container {
-            margin-top: 25px;
-            padding: 0; 
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: var(--panel-bg); /* Light background for the container */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05), 0 0 5px rgba(59, 130, 246, 0.1); 
-        }
-        
-        .spoiler-container {
-            border: 2px solid var(--spoiler-border); /* Warning color border */
-        }
-        .review-container {
-            border: 2px solid var(--review-border); /* Info color border */
-        }
-
-        .toggle-btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            cursor: pointer;
-            font-weight: 700;
-            text-align: left;
-            transition: background-color 0.2s, color 0.2s;
-            color: var(--panel-text); /* Dark text */
-            background-color: var(--panel-bg); /* Light gray-blue */
-            border-bottom: 1px solid var(--border-color); 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .toggle-btn:hover {
-            background-color: #e2e8f0; /* Slightly darker light */
-        }
-        
-        .toggle-icon {
-            font-size: 18px;
-            transition: transform 0.3s ease;
-        }
-
-        .expanded-btn .toggle-icon {
-            transform: rotate(180deg);
-        }
-
-        .panel-title-label {
-            font-size: 16px;
-            letter-spacing: 0.5px;
-        }
-
-        /* Content Area */
-        .spoiler-content, .review-content {
-            background-color: var(--spoiler-bg); /* Pure White */
-            padding: 20px; 
-            color: var(--panel-text); /* Dark text */
-        }
-
-        .content-label {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--panel-accent); /* Neon color for internal labels */
-            margin-bottom: 10px;
-            display: block;
-            border-bottom: 1px dashed rgba(52, 68, 88, 0.2); /* Darker dashed line */
-            padding-bottom: 5px;
-        }
-        
-        .spoiler-text, .review-text {
-            font-size: 15px;
-            line-height: 1.7;
-            margin-bottom: 15px;
-            padding: 10px 0;
-        }
-        
-        .review-section {
-            margin-bottom: 20px;
-        }
-
-        /* Smooth Expansion/Collapse Logic */
-        .expandable-content {
-            max-height: 0;
-            opacity: 0;
-            visibility: hidden;
-            overflow: hidden;
-            transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out, padding 0.5s ease-in-out;
-            padding-top: 0;
-            padding-bottom: 0;
-        }
-
-        .expanded {
-            max-height: 1000px; /* Sufficiently large value */
-            opacity: 1;
-            visibility: visible;
-            padding-top: 20px;
-            padding-bottom: 20px;
-        }
-
-        .back-to-list-btn {
-            background-color: var(--text-muted);
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: background-color 0.2s;
-        }
-        
-        .back-to-list-btn:hover {
-            background-color: #5a6268;
-        }
-
-        /* Load More Button & Status */
-        .load-more-btn {
-            width: 100%;
-            background-color: var(--card-bg);
-            color: var(--accent-primary);
-            border: 2px solid var(--accent-primary);
-            padding: 12px;
-            font-size: 15px;
-            font-weight: 700;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: background-color 0.2s, color 0.2s;
-        }
-        .load-more-btn:hover:not(:disabled) {
-            background-color: var(--accent-primary);
-            color: white;
-        }
-        .load-more-btn:disabled {
-            background-color: var(--card-bg);
-            border-color: var(--border-color);
-            color: var(--text-muted);
-            cursor: default;
-        }
-
-        /* --- [START] Modern Spinner Styles --- */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .spinner-ring {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(0, 86, 179, 0.2); /* Light primary color */
-            border-radius: 50%;
-            border-top-color: var(--accent-primary); /* Primary color for rotation part */
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 15px; /* Increased margin */
-        }
-        
-        .status-msg {
-            text-align: center;
-            line-height: 1.6;
-        }
-        /* --- [END] Modern Spinner Styles --- */
-
-        /* Animations */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Responsive */
-        @media (max-width: 600px) {
-            .broadcast-container {
-                width: 100%;
-                border: none;
-                border-radius: 0;
-            }
-            .list-card {
-                flex-wrap: wrap;
-            }
-            .list-rank {
-                order: 1;
-                margin-right: 10px;
-            }
-            .list-content {
-                order: 2;
-                flex-basis: 70%;
-            }
-            .list-match {
-                order: 3;
-                width: 100%;
-                margin: 5px 0 0 0;
-                text-align: right;
-            }
-        }
+        /* 스타일은 기존과 동일하게 유지 */
+        :root { --bg-color: #f0f2f5; --container-bg: #ffffff; --card-bg: #f8f9fa; --accent-primary: #0056b3; --accent-secondary: #d63384; --text-main: #212529; --text-muted: #6c757d; --border-color: #dee2e6; --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 4px 6px rgba(0,0,0,0.1); --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; --panel-bg: #f0f4f8; --panel-accent: #3b82f6; --panel-text: #344458; --spoiler-bg: #ffffff; --spoiler-border: #ef4444; --review-border: #3b82f6; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--font-main); background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; padding: 40px 20px; }
+        .broadcast-container { width: 100%; max-width: 900px; background: var(--container-bg); border-radius: 12px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; border: 1px solid var(--border-color); }
+        .broadcast-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); }
+        header { padding: 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; background-color: #fff; }
+        .header-content { display: flex; flex-direction: column; gap: 5px; }
+        .main-title { font-size: 26px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+        .sub-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+        .sub-title span { color: var(--accent-primary); }
+        .live-badge { background-color: var(--accent-primary); color: white; font-size: 11px; font-weight: bold; padding: 6px 12px; border-radius: 20px; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0, 86, 179, 0.3); }
+        .control-panel { padding: 30px; background-color: #fff; }
+        .input-group { margin-bottom: 25px; }
+        .input-label { display: block; font-size: 14px; color: var(--accent-primary); font-weight: 700; margin-bottom: 8px; }
+        input[type="text"], textarea { width: 100%; background-color: #f8f9fa; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); padding: 15px; font-size: 16px; font-family: var(--font-main); transition: all 0.2s ease; outline: none; }
+        input[type="text"]:focus, textarea:focus { border-color: var(--accent-primary); background-color: #fff; box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1); }
+        .analyze-btn { width: 100%; background: var(--accent-primary); color: #fff; border: none; padding: 16px; font-size: 16px; font-weight: 700; border-radius: 6px; cursor: pointer; transition: background 0.2s, transform 0.1s; box-shadow: 0 4px 6px rgba(0, 86, 179, 0.2); }
+        .analyze-btn:hover { background: #004494; transform: translateY(-1px); }
+        .analyze-btn:active { transform: translateY(0); }
+        .results-panel { background-color: #f8f9fa; padding: 30px; min-height: 200px; border-top: 1px solid var(--border-color); }
+        .section-header { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .section-header::before { content: ''; display: block; width: 4px; height: 16px; background-color: var(--accent-secondary); border-radius: 2px; }
+        .list-card { background-color: #fff; border-radius: 8px; margin-bottom: 12px; padding: 15px; display: flex; align-items: center; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); cursor: pointer; transition: background-color 0.2s, transform 0.1s; animation: slideIn 0.5s ease-out forwards; opacity: 0; }
+        .list-card:hover { background-color: #e9f0f6; transform: translateY(-1px); }
+        .list-rank { background-color: var(--accent-primary); color: white; width: 30px; height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; margin-right: 15px; }
+        .list-content { flex-grow: 1; min-width: 0; }
+        .list-title { font-size: 16px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .list-meta { font-size: 13px; color: var(--text-main); margin-top: 2px; font-weight: 500; }
+        .list-reason { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
+        .list-match { font-size: 12px; font-weight: 700; color: var(--accent-secondary); flex-shrink: 0; margin-left: 15px; }
+        .detail-view-wrapper { animation: fadeIn 0.4s ease-out; }
+        .detail-view { background-color: #fff; padding: 25px; border-radius: 8px; box-shadow: var(--shadow-md); margin-top: 20px; }
+        .detail-header { font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .detail-badge { font-size: 13px; padding: 5px 10px; background-color: var(--accent-secondary); color: white; border-radius: 4px; font-weight: 700; }
+        .info-block { margin-bottom: 20px; padding: 15px; background-color: var(--card-bg); border-radius: 6px; border-left: 4px solid var(--accent-primary); }
+        .info-label { font-size: 14px; color: var(--accent-primary); font-weight: 700; margin-bottom: 6px; display: block; }
+        .info-text { font-size: 15px; color: var(--text-main); line-height: 1.6; margin: 0; }
+        .spoiler-container, .review-container { margin-top: 25px; padding: 0; border-radius: 8px; overflow: hidden; background-color: var(--panel-bg); box-shadow: 0 0 10px rgba(0, 0, 0, 0.05); }
+        .spoiler-container { border: 2px solid var(--spoiler-border); }
+        .review-container { border: 2px solid var(--review-border); }
+        .toggle-btn { width: 100%; padding: 15px; border: none; cursor: pointer; font-weight: 700; text-align: left; transition: background-color 0.2s, color 0.2s; color: var(--panel-text); background-color: var(--panel-bg); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .toggle-btn:hover { background-color: #e2e8f0; }
+        .toggle-icon { font-size: 18px; transition: transform 0.3s ease; }
+        .expanded-btn .toggle-icon { transform: rotate(180deg); }
+        .spoiler-content, .review-content { background-color: var(--spoiler-bg); padding: 20px; color: var(--panel-text); }
+        .content-label { font-size: 14px; font-weight: 600; color: var(--panel-accent); margin-bottom: 10px; display: block; border-bottom: 1px dashed rgba(52, 68, 88, 0.2); padding-bottom: 5px; }
+        .spoiler-text, .review-text { font-size: 15px; line-height: 1.7; margin-bottom: 15px; padding: 10px 0; }
+        .expandable-content { max-height: 0; opacity: 0; visibility: hidden; overflow: hidden; transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out, padding 0.5s ease-in-out; padding-top: 0; padding-bottom: 0; }
+        .expanded { max-height: 1000px; opacity: 1; visibility: visible; padding-top: 20px; padding-bottom: 20px; }
+        .back-to-list-btn { background-color: var(--text-muted); color: white; padding: 10px 15px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: background-color 0.2s; }
+        .back-to-list-btn:hover { background-color: #5a6268; }
+        .load-more-btn { width: 100%; background-color: var(--card-bg); color: var(--accent-primary); border: 2px solid var(--accent-primary); padding: 12px; font-size: 15px; font-weight: 700; border-radius: 6px; cursor: pointer; margin-top: 15px; transition: background-color 0.2s, color 0.2s; }
+        .load-more-btn:hover:not(:disabled) { background-color: var(--accent-primary); color: white; }
+        .load-more-btn:disabled { background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-muted); cursor: default; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .spinner-ring { display: inline-block; width: 40px; height: 40px; border: 4px solid rgba(0, 86, 179, 0.2); border-radius: 50%; border-top-color: var(--accent-primary); animation: spin 0.8s linear infinite; margin-bottom: 15px; }
+        .status-msg { text-align: center; line-height: 1.6; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @media (max-width: 600px) { .broadcast-container { width: 100%; border: none; border-radius: 0; } }
     </style>
 </head>
 <body>
@@ -540,14 +82,12 @@
     <div class="control-panel">
         <div class="input-group">
             <label class="input-label">분석 대상 영화 (필수)</label>
-            <input type="text" id="movieTitle" 
-                   placeholder="사용자가 감명깊게 본 영화, 연관 작품을 추천받고 싶은 영화 제목을 작성해주십시오">
+            <input type="text" id="movieTitle" placeholder="사용자가 감명깊게 본 영화 제목">
         </div>
 
         <div class="input-group">
             <label class="input-label">상세 요청 사항 (선택)</label>
-            <textarea id="userDetail" rows="3" 
-                      placeholder="예시 : 이 영화와 비슷한 '장르'를 추천해줘, 이 영화의 '배우가 비슷한 역할'로 나오는 작품을 추천해줘, 이 영화와 '비슷한 분위기'의 작품을 추천해줘"></textarea>
+            <textarea id="userDetail" rows="3" placeholder="예: 비슷한 '장르' 추천해줘, 비슷한 '분위기' 추천해줘"></textarea>
         </div>
 
         <button class="analyze-btn" onclick="register()">분석 및 추천 시작</button>
@@ -566,216 +106,98 @@
 
 <script>
     /**
-     * [설정] API 서버 주소 상수
-     * 경로명(/recommend_movies)은 fetch 요청에 추가됩니다.
-     * 주의: 백엔드 주소의 포트 :8000은 제거해야 합니다. Replit 환경에서는 프록시가 자동 처리합니다.
+     * [설정] 서버 주소 (상대 경로)
+     * 빈 문자열("")로 설정하면 자동으로 현재 접속한 서버(main.py)로 요청을 보냅니다.
+     * "Failed to fetch" 오류를 방지하는 핵심입니다.
      */
-    const BASE_SERVER_URL = "https://c3fc9cb9-cce9-445c-963d-c1c1ea48a69e-00-h6rqi5pdnpvp.sisko.replit.dev"; 
-    const RECOMMEND_ENDPOINT = "/recommend_movies"; // 목록을 반환하는 엔드포인트 지정
+    const BASE_SERVER_URL = ""; 
+    const RECOMMEND_ENDPOINT = "/recommend_movies";
     
-    /**
-     * 전역 상태 관리 변수
-     */
-    let allRecommendations = []; // 전체 추천 작품 목록 저장
-    let currentDisplayCount = 0; // 현재 화면에 표시된 작품 수
-    let loadCount = 0; // '더 보기' 버튼 클릭 횟수 (최대 2회)
+    let allRecommendations = [];
+    let currentDisplayCount = 0;
+    let loadCount = 0;
 
-    // 백엔드 연결 실패 시를 대비한 데모용 데이터 (이 데이터는 UI 구조를 보여주기 위해 유지합니다.)
+    // 데모 데이터 (서버 오류 시 표시)
     const MOCK_DATA = [
-        {
-            title: "블레이드 러너 2049",
-            director: "드니 빌뇌브", 
-            year: "2017",
-            reason: "깊은 주제 의식과 시각적 누아르 미학의 완벽한 조화, 정체성을 찾아 헤매는 고독한 주인공의 플롯 유사성.",
-            detailedReason: "입력하신 영화와 동일한 '사이버펑크 누아르' 장르의 정점을 보여주는 작품입니다. 특히 고독한 주인공이 자신의 정체성을 찾아가는 철학적 플롯 구조가 매우 유사하며, 시각적으로 압도적인 미장센과 한스 짐머의 웅장한 사운드 디자인이 일맥상통합니다. 두 작품 모두 '인간이란 무엇인가?'라는 근원적인 질문을 던집니다.",
-            summary: "2049년, 리플리컨트(인조인간) 제조가 금지된 시대에 구형 리플리컨트를 제거하는 임무를 맡은 K는 임무 수행 중 30년 전에 봉인된 엄청난 비밀과 마주하게 된다. 이 비밀은 리플리컨트와 인간 사회의 근간을 뒤흔들 수 있는 것으로, K는 자신과 관련된 충격적인 진실을 파헤치기 위해 과거의 인물들을 찾아다니며 위험한 여정을 시작한다. 그의 조사는 그를 전설적인 블레이드 러너였던 릭 데커드에게로 이끌고, 두 사람은 존재의 의미와 기억의 진위에 대한 혼란스러운 질문 속에서 거대한 음모의 중심에 서게 된다. 영화는 극도로 아름다우면서도 절망적인 미래 도시의 풍경을 배경으로 인간성, 감정, 영혼의 경계에 대해 심오하게 탐구합니다. 이 과정에서 K는 자신이 누구인지, 그리고 무엇이 진정한 인간의 삶을 구성하는지에 대한 고뇌에 빠지며, 숨 막히는 긴장감과 느와르적 분위기가 시종일관 관객을 압도합니다. 이 서사는 원작의 철학을 계승하면서도 한층 더 깊어진 사색의 여지를 남깁니다.", 
-            matchRate: "98%",
-            reviews: {
-                audience: "시대를 초월하는 미학적 성취. 느린 호흡 때문에 호불호가 갈리지만, 이토록 아름다운 SF를 다시 보긴 힘들 것이다. 원작의 팬이라면 반드시 봐야 할 경이로운 속편.",
-                critic: "드니 빌뇌브 감독의 비전과 로저 디킨스 촬영감독의 마법이 결합된 SF 걸작. 사유를 멈출 수 없게 만드는 철학적 깊이와 시각적 쾌감이 스크린을 가득 채운다. 21세기 최고의 SF 영화 중 하나로 손꼽힐만하다."
-            }
-        },
-        {
-            title: "도착 (Arrival)",
-            director: "드니 빌뇌브",
-            year: "2016",
-            reason: "언어와 시간, 그리고 소통의 본질에 대한 지적인 탐구와 정적인 서스펜스를 겸비한 SF 수작.",
-            detailedReason: "드니 빌뇌브 감독 특유의 '지적이고 정적인 긴장감'을 공유합니다. 단순한 SF 액션이 아닌, 소통과 시간에 대한 철학적 질문을 던지는 서사 방식이 입력하신 작품의 깊이감과 잘 어울립니다. 서서히 고조되는 분위기와 뛰어난 심리 묘사가 특징입니다.",
-            summary: "어느 날 전 세계 12개 지역에 거대한 외계 비행 물체 '셸'이 나타난다. 지구를 방문한 외계 종족 '헵타포드'의 목적을 파악하기 위해 미군은 저명한 언어학자 루이스 뱅크스를 투입한다. 루이스는 물리학자 이안 도넬리와 함께 헵타포드들의 복잡하고 비선형적인 언어 구조를 해독하는 어려운 임무를 맡게 된다. 이 과정에서 루이스는 그들의 언어가 인간의 시간 인식을 초월하는 힘을 가졌음을 깨닫고, 미래와 과거를 동시에 인지하는 놀라운 능력을 경험하게 된다. 그녀의 개인적인 삶의 기억들이 외계 언어 해독과 얽히면서, 인류의 운명을 건 중대한 결정과 비극적인 선택에 직면하게 된다. 영화는 외계 생명체와의 접촉이라는 소재를 통해 궁극적으로는 인간의 삶과 사랑, 운명을 성찰하게 하는 깊은 여운을 선사합니다.",
-            matchRate: "92%",
-            reviews: {
-                audience: "단순한 외계인 침공 이야기가 아니다. 섬세하고 감성적인 연출에 압도당했다. 결말의 반전은 눈물을 자아낸다. 머리와 가슴을 모두 울리는 영화.",
-                critic: "기존 SF 문법을 해체하고 새로운 차원의 지적 스릴러를 구축했다. 에이미 아담스의 연기는 최고이며, 영화가 던지는 메시지는 수년이 지나도 유효하다. 걸작이라는 단어가 아깝지 않다."
-            }
-        },
-        {
-            title: "패신저스 (Passengers)",
-            director: "모튼 틸덤",
-            year: "2016",
-            reason: "장거리 우주 여행이라는 고립된 설정과 로맨스, 윤리적 딜레마를 결합한 스펙터클.",
-            detailedReason: "극도의 고립된 상황에서 주인공들이 내리는 비윤리적 선택과 그 결과에 대한 부담감을 다루는 점이 일부 정서적 유사성을 갖습니다. 우주라는 거대한 스케일 속에서 펼쳐지는 인간 본연의 외로움과 갈등이 주요 테마입니다.",
-            summary: "120년간의 동면 우주 여행 중인 아발론 호에서 기계 오작동으로 짐 프레스턴이 90년 일찍 깨어난다. 홀로 남겨진 광활한 우주선 안에서 1년의 고독을 견디던 그는 도저히 혼자 살 수 없다는 생각에 미모의 작가 오로라 레인을 강제로 깨운다. 이기적인 선택으로 오로라의 인생을 망친 짐은 그녀에게 자신의 행위를 비밀로 한 채 로맨스를 이어가지만, 진실은 결국 드러난다. 이 딜레마가 우주선 전체의 위기로 확대되면서 두 사람은 생존을 위해 협력해야 하는 상황에 놓인다. 극한의 상황 속에서 사랑과 윤리, 그리고 희생의 의미를 탐구하는 영화입니다.",
-            matchRate: "78%",
-            reviews: {
-                audience: "크리스 프랫과 제니퍼 로렌스의 케미가 좋았다. 아름다운 영상미와 흥미로운 설정이 돋보이지만, 스토리의 윤리적 딜레마가 다소 불편했다는 의견도 있다.",
-                critic: "화려한 비주얼을 자랑하지만, 윤리적 문제 제기를 회피하며 로맨스로 안주한 아쉬운 각본. 매력적인 설정에 비해 서사가 단순하다는 평."
-            }
-        },
-        {
-            title: "루시 (Lucy)",
-            director: "뤽 베송",
-            year: "2014",
-            reason: "인간의 잠재력 해방과 뇌 과학적 상상력을 폭발적인 액션으로 그려낸 대중적인 SF.",
-            detailedReason: "뇌 사용량을 극한으로 끌어올린다는 설정은 지적인 탐구를 원하는 사용자의 취향에 부합할 수 있습니다. 철학적 주제를 액션과 결합한 뤽 베송 감독 특유의 대중적이고 스타일리시한 연출이 특징입니다.",
-            summary: "평범한 여대생 루시가 마약 조직에 얽혀 CP4라는 신종 약물을 강제로 운반하게 된다. 이 약물이 몸속에서 터지면서 루시는 인간의 뇌 사용 영역이 비약적으로 확장되는 초인적인 능력을 얻게 된다. 그녀는 점차 감각과 지능이 극도로 발달하면서 시간, 공간, 물질을 통제할 수 있게 된다. 루시는 자신의 몸을 통제하기 위해 미스터 チャン에게 복수하고, 동시에 뇌 과학자 노먼 교수를 찾아가 인류의 지식과 진화에 대한 해답을 찾으려 한다. 이 과정에서 그녀는 인간의 한계를 초월한 존재로 변화하며, 인류의 운명을 건 궁극적인 선택에 직면하게 됩니다. 뤽 베송 감독 특유의 스타일리시한 액션과 철학적 상상력이 결합된 작품입니다.",
-            matchRate: "75%",
-            reviews: {
-                audience: "스칼렛 요한슨의 매력과 폭발적인 액션이 눈을 즐겁게 한다. 과학적 고증은 무시해도, 상상력 하나는 대단하다. 가볍게 즐기기 좋은 킬링 타임 영화.",
-                critic: "뤽 베송 감독의 독창성이 살아있는 작품이지만, 후반부의 철학적 메시지가 다소 난해하거나 과장되었다는 지적도 있다. 액션 연출은 훌륭하다."
-            }
-        },
-        {
-            title: "인셉션 (Inception)",
-            director: "크리스토퍼 놀란",
-            year: "2010",
-            reason: "꿈속의 꿈이라는 복잡한 구조와 놀란 감독 특유의 치밀하고 지적인 서사, 미스터리 스릴러의 매력.",
-            detailedReason: "매우 복잡하고 다층적인 플롯을 요구하는 지적인 스릴러의 정점입니다. 꿈과 현실의 경계를 넘나들며 관객에게 끊임없이 질문을 던지는 서사 방식이 입력하신 영화의 깊이감과 미스터리 요소를 충족시킬 수 있습니다.",
-            summary: "드림 셰어링 기술을 통해 타인의 꿈속에 들어가 아이디어를 훔치는 특수 요원 '코브'. 그는 이제 아이디어를 심는 '인셉션'이라는 불가능한 미션을 수행해야 한다. 이 임무는 여러 단계의 꿈속으로 침투해야 하는 극도로 위험하고 복잡한 작업이다. 코브는 꿈의 설계자, 위조자 등 전문가들로 팀을 구성하여 임무를 시작하지만, 무의식 깊은 곳에 잠재된 코브 자신의 과거 트라우마가 꿈을 위협하며 팀 전체를 위험에 빠뜨린다. 현실과 꿈, 꿈속의 꿈을 오가며 펼쳐지는 시각적 스펙터클과 치밀한 서사는 관객에게 극도의 긴장감과 지적 만족감을 선사하며, 영화의 결말은 여전히 많은 논란과 해석을 낳고 있습니다.",
-            matchRate: "85%",
-            reviews: {
-                audience: "크리스토퍼 놀란의 천재적인 아이디어와 압도적인 스케일. 두 번, 세 번 봐도 새로운 것을 발견하는 지적인 즐거움이 있다. 근래 가장 완벽한 블록버스터.",
-                critic: "시각적 혁명과 치밀한 스토리텔링의 완벽한 결합. 꿈과 무의식이라는 주제를 가장 역동적으로 표현한 놀라운 성취. 21세기 최고의 영화 중 하나로 손꼽힌다."
-            }
-        },
-         {
-            title: "문 (Moon)",
-            director: "던컨 존스",
-            year: "2009",
-            reason: "고립된 공간 속에서 자신의 정체성과 복제 기술의 윤리적 문제를 마주하는 미니멀한 서사.",
-            detailedReason: "소수의 인물이 극도로 고립된 공간에서 정체성에 대한 심도 깊은 질문을 던지는 미니멀리즘 SF의 걸작입니다. 복제 기술이 초래하는 윤리적 딜레마와 서서히 밝혀지는 충격적인 진실은 강한 몰입감을 선사합니다.",
-            summary: "달 기지에서 홀로 3년 계약 기간 동안 근무하며 지구에 에너지를 공급하는 임무를 맡은 우주인 샘 벨. 그는 인공지능 로봇 거티와만 대화하며 지루하고 고독한 일상을 보낸다. 계약 기간이 거의 끝나갈 무렵, 샘은 알 수 없는 사고를 겪고 깨어난다. 그리고 기지 안에서 자신과 똑같이 생긴 또 다른 샘 벨을 발견하게 된다. 충격과 혼란 속에서 두 샘은 누가 진짜이고 누가 복제본인지, 그리고 3년 계약의 이면에 숨겨진 회사와 시스템의 잔혹한 비밀을 파헤치기 시작한다. 이 과정에서 샘은 인간의 정체성과 기억의 의미에 대해 깊이 고뇌하게 되며, 자신의 존재 이유를 찾기 위한 처절한 노력을 시작한다. 단조로운 배경 속에서도 샘 록웰의 뛰어난 연기와 치밀한 스토리텔링이 빛나는 영화입니다.",
-            matchRate: "65%",
-            reviews: {
-                audience: "신선한 충격과 슬픔을 주는 영화. 단조로운 배경과 적은 인물로 이렇게 훌륭한 이야기를 만들어내다니 놀랍다. 훌륭한 독립 SF 영화의 예시.",
-                critic: "화려함 대신 영리한 아이디어와 감성적인 연출로 승부한다. 복제인간이라는 고전적 소재를 가장 인간적인 방식으로 풀어낸 수작. 던컨 존스 감독의 센스가 돋보인다."
-            }
-        },
-        // AI 응답이 11개까지 가능하므로 데모 데이터도 11개까지 채울 수 있습니다. (현재 6개)
+        { title: "인셉션", director: "크리스토퍼 놀란", year: "2010", reason: "복잡한 플롯과 지적 스릴러", detailedReason: "꿈과 현실을 오가는 구조가 유사합니다.", summary: "타인의 꿈에 들어가 생각을 훔치는 이야기.", matchRate: "98%", reviews: { audience: "최고의 SF", critic: "완벽한 연출" } },
+        { title: "테넷", director: "크리스토퍼 놀란", year: "2020", reason: "시간 역행을 다룬 액션", detailedReason: "시간을 소재로 한 복잡한 서사가 유사합니다.", summary: "시간의 흐름을 뒤집어 세상을 구하는 이야기.", matchRate: "90%", reviews: { audience: "어렵지만 재밌다", critic: "시각적 충격" } }
     ];
 
-
-    /**
-     * [핵심 기능] 추천 요청 함수 - /recommend_movies 엔드포인트 호출
-     */
     async function register() {
         const titleInput = document.getElementById('movieTitle');
         const detailInput = document.getElementById('userDetail');
         const outputContainer = document.getElementById('output-container');
         const analyzeBtn = document.querySelector('.analyze-btn');
 
-        // 1. 유효성 검사
         if (!titleInput.value.trim()) {
-            console.error("분석할 영화 제목을 입력해주세요.");
-            outputContainer.innerHTML = '<div class="status-msg" style="color: var(--accent-secondary);">⚠️ 분석할 영화 제목을 입력해주세요.</div>';
+            outputContainer.innerHTML = '<div class="status-msg" style="color: var(--accent-secondary);">⚠️ 영화 제목을 입력해주세요.</div>';
             return;
         }
 
-        // 2. 로딩 상태 UI 표시 (모던 스피너 적용)
-        analyzeBtn.disabled = true; // 버튼 비활성화
+        analyzeBtn.disabled = true;
         analyzeBtn.textContent = 'AI 분석 중...';
         outputContainer.innerHTML = `
             <div class="status-msg" style="color: var(--accent-primary); display: flex; flex-direction: column; align-items: center;">
                 <div class="spinner-ring"></div>
-                데이터 처리 중...<br>Gemini AI가 심층 분석 및 추천 목록을 생성 중입니다.
+                데이터 처리 중...<br>Gemini AI가 분석 중입니다.
             </div>
         `;
 
-        // 3. 데이터 준비 (백엔드 /recommend_movies 형식에 맞춤)
         const requestData = {
-            watched_movies: [titleInput.value.trim()], // 분석 대상 영화를 본 영화로 간주
+            watched_movies: [titleInput.value.trim()],
             genre_expansion_movies: detailInput.value.trim() ? [detailInput.value.trim()] : [], 
             atmosphere_movies: [], 
         };
 
         try {
-            // 서버 연결 및 데이터 Fetch (JSON 목록을 반환하는 엔드포인트 호출)
+            // BASE_SERVER_URL이 ""(빈 값)이므로 현재 주소로 요청을 보냅니다.
             const response = await fetch(BASE_SERVER_URL + RECOMMEND_ENDPOINT, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestData)
             });
 
             if (!response.ok) {
                 const errorBody = await response.json().catch(() => ({}));
-                const errorMessage = errorBody.detail || errorBody.error?.message || response.statusText;
-                throw new Error(`HTTP Error ${response.status}: ${errorMessage}`);
+                throw new Error(errorBody.detail || response.statusText);
             }
 
-            // 응답받은 JSON 파싱
             const result = await response.json();
             
-            // 핵심: 백엔드가 반환한 'recommendations' 배열을 allRecommendations에 저장
-            if (result && result.recommendations && Array.isArray(result.recommendations)) {
-                
-                // 백엔드 데이터 구조와 프론트엔드 MOCK_DATA 구조를 맞추는 임시 처리
+            if (result && result.recommendations) {
                 allRecommendations = result.recommendations.map((item, index) => ({
                     title: item.title,
-                    director: item.director || '정보 없음', // 누락될 경우 대체
-                    year: item.year || 'N/A', // 누락될 경우 대체
+                    director: item.director || '정보 없음',
+                    year: item.year || 'N/A',
                     reason: item.reason, 
-                    detailedReason: item.reason, 
-                    matchRate: `${99 - (index * 5)}%`, 
-                    summary: "AI가 생성한 데이터에는 상세 줄거리 요약이 포함되어 있지 않습니다. 실제 서비스에서는 이 데이터를 포함할 수 있습니다.",
-                    reviews: { audience: "시청자 평가 데이터 없음", critic: "평론가 분석 데이터 없음" }
+                    detailedReason: item.detailedReason || item.reason, 
+                    matchRate: item.matchRate || `${99 - (index * 5)}%`, 
+                    summary: item.summary || "줄거리 정보 없음",
+                    reviews: item.reviews || { audience: "평가 없음", critic: "평가 없음" }
                 }));
-
-                if (allRecommendations.length === 0) {
-                     outputContainer.innerHTML = '<div class="status-msg">AI가 추천할 만한 작품을 찾지 못했습니다. 다른 영화를 시도해 보세요.</div>';
-                } else {
-                    renderList(true); // 성공적인 목록 렌더링
-                }
-
+                renderList(true);
             } else {
-                throw new Error(`AI 응답 데이터 형식이 올바르지 않습니다. 'recommendations' 배열을 확인하세요. JSON 응답: ${JSON.stringify(result).substring(0, 100)}...`);
+                throw new Error("데이터 형식 오류");
             }
 
         } catch (error) {
-            console.error("AI 서버 호출 오류 발생:", error);
-            
-            // 오류 발생 시 데모 데이터 사용
+            console.error("오류:", error);
             allRecommendations = MOCK_DATA; 
-            
-            outputContainer.innerHTML = `
-                <div class="status-msg" style="color: var(--spoiler-border);">
-                    ❌ [AI 호출 중 오류] ${error.message}<br>
-                    대체 데이터(Demo Data)를 표시합니다.
-                </div>
-            `;
-            
-            setTimeout(() => {
-                renderList(true); 
-            }, 1200); 
+            outputContainer.innerHTML = `<div class="status-msg" style="color:red;">❌ 오류: ${error.message}<br>데모 데이터를 표시합니다.</div>`;
+            setTimeout(() => renderList(true), 1500);
         } finally {
             analyzeBtn.disabled = false;
             analyzeBtn.textContent = '분석 및 추천 시작';
         }
     }
 
-    /**
-     * [UI 기능] 목록 렌더링 함수 (5개 초기 로드, 3개씩 추가 로드 구현)
-     * @param {boolean} isInitialLoad - 초기 로드인지 여부 (초기화 및 카운트 설정)
-     */
     function renderList(isInitialLoad) {
         const outputContainer = document.getElementById('output-container');
-        
         if (isInitialLoad) {
             outputContainer.innerHTML = ''; 
-
             const listTitle = document.createElement('h3');
-            listTitle.className = 'section-header list-section-header';
-            listTitle.innerHTML = `추천 작품 목록`;
+            listTitle.className = 'section-header';
+            listTitle.innerText = `추천 작품 목록`;
             outputContainer.appendChild(listTitle);
 
             const listDiv = document.createElement('div');
@@ -783,193 +205,86 @@
             outputContainer.appendChild(listDiv);
 
             currentDisplayCount = 0;
-            loadCount = 0; // 초기 로드 시 0으로 재설정
-
-            if (!allRecommendations || allRecommendations.length === 0) {
-                listDiv.innerHTML = '<div class="status-msg">일치하는 결과가 없습니다.</div>';
-                return;
-            }
+            loadCount = 0;
         }
 
         const listDiv = document.getElementById('recommendation-list-wrapper');
-
         const startIndex = currentDisplayCount;
-        const itemsToLoad = isInitialLoad ? 5 : 3; // 5개 초기, 3개씩 추가
+        const itemsToLoad = isInitialLoad ? 5 : 3;
         const endIndex = Math.min(startIndex + itemsToLoad, allRecommendations.length);
         
         for (let i = startIndex; i < endIndex; i++) {
             const item = allRecommendations[i];
             const card = document.createElement('div');
             card.className = 'list-card'; 
-            card.onclick = () => showDetail(i, allRecommendations); 
+            card.onclick = () => showDetail(i); 
             card.style.animationDelay = `${(i - startIndex) * 0.1}s`;
-
-            const matchRateText = item.matchRate || 'N/A';
-
-            // 리스트 카드 UI에 제목, 년도, 감독, 유사성(reason) 표시
             card.innerHTML = `
                 <div class="list-rank">${i + 1}</div>
                 <div class="list-content">
                     <div class="list-title">${item.title}</div>
-                    <div class="list-meta">감독: ${item.director || 'N/A'} | 개봉: ${item.year || 'N/A'}</div>
+                    <div class="list-meta">감독: ${item.director} | 개봉: ${item.year}</div>
                     <div class="list-reason">💡 ${item.reason}</div>
                 </div>
-                <div class="list-match">일치율 ${matchRateText}</div>
+                <div class="list-match">일치율 ${item.matchRate}</div>
             `;
             listDiv.appendChild(card);
         }
-
         currentDisplayCount = endIndex;
-        updateLoadMoreButton(); // 버튼 상태 업데이트
+        updateLoadMoreButton();
     }
 
-    /**
-     * [UI 기능] '더 많은 추천' 버튼 상태 업데이트 및 추가 (총 2번까지 클릭 가능)
-     */
     function updateLoadMoreButton() {
         const outputContainer = document.getElementById('output-container');
         let loadMoreBtn = document.getElementById('loadMoreBtn');
-        
-        if (loadMoreBtn) loadMoreBtn.remove(); // 기존 버튼 제거
+        if (loadMoreBtn) loadMoreBtn.remove();
 
-        // 최대 로드 횟수 (3개씩 2회)
-        const maxClicks = 2; 
-
-        if (currentDisplayCount < allRecommendations.length) {
+        if (currentDisplayCount < allRecommendations.length && loadCount < 2) {
             loadMoreBtn = document.createElement('button');
             loadMoreBtn.id = 'loadMoreBtn';
             loadMoreBtn.className = 'load-more-btn';
-            
-            const remaining = allRecommendations.length - currentDisplayCount;
-            const nextLoad = Math.min(remaining, 3);
-            
-            if (loadCount < maxClicks) { 
-                // 추가 로드 가능
-                loadMoreBtn.textContent = `더 많은 추천 (${nextLoad}개 더 보기)`;
-                loadMoreBtn.onclick = loadMore;
-            } else {
-                // 최대 클릭 횟수 도달 (11개 모두 표시되었거나, 2번 클릭 완료)
-                loadMoreBtn.disabled = true;
-                loadMoreBtn.textContent = `더 이상 추천 버튼을 누를 수 없습니다. (총 ${currentDisplayCount}개 표시됨)`;
-            }
-            outputContainer.appendChild(loadMoreBtn);
-
-        } else if (currentDisplayCount === allRecommendations.length && allRecommendations.length > 5) {
-            // 모든 항목 로드 완료
-            loadMoreBtn = document.createElement('button');
-            loadMoreBtn.id = 'loadMoreBtn';
-            loadMoreBtn.className = 'load-more-btn';
-            loadMoreBtn.disabled = true;
-            loadMoreBtn.textContent = `✅ 모든 작품(${allRecommendations.length}개) 표시 완료`;
+            loadMoreBtn.textContent = `더 보기 (${Math.min(allRecommendations.length - currentDisplayCount, 3)}개)`;
+            loadMoreBtn.onclick = () => { loadCount++; renderList(false); };
             outputContainer.appendChild(loadMoreBtn);
         }
     }
 
-    /**
-     * [핵심 기능] '더 보기' 버튼 클릭 처리
-     */
-    function loadMore() {
-        loadCount++;
-        renderList(false); // isInitialLoad = false (3개씩 로드)
-    }
-
-
-    /**
-     * [UI 기능] 상세 정보 렌더링 함수 (팝업 스타일의 상세 페이지)
-     */
-    function showDetail(index, data) {
+    function showDetail(index) {
         const outputContainer = document.getElementById('output-container');
-        const item = data[index];
-        
-        // 상세 보기 시 목록 숨김
-        outputContainer.innerHTML = '';
-        
-        // 데이터 대체 처리
-        const detailedReason = item.detailedReason || item.reason || 'AI로부터 상세 추천 이유를 받지 못했습니다.';
-        const summaryText = item.summary || 'AI가 생성한 데이터에는 상세 줄거리 요약이 포함되어 있지 않습니다. 실제 서비스에서는 이 데이터를 포함할 수 있습니다.';
-        const audienceReview = item.reviews?.audience || '시청자 평가 데이터 없음';
-        const criticReview = item.reviews?.critic || '평론가 분석 데이터 없음';
-
+        const item = allRecommendations[index];
         outputContainer.innerHTML = `
             <div class="detail-view-wrapper">
-                <button class="back-to-list-btn" onclick="register()">
-                    &larr; 목록으로 돌아가기
-                </button>
-
-                <div class="detail-view">
+                <button class="back-to-list-btn" onclick="renderList(true)">&larr; 목록으로 돌아가기</button> <div class="detail-view">
                     <div class="detail-header">
-                        <span>${item.title} (${item.year || 'N/A'}) - ${item.director || 'N/A'}</span>
-                        <span class="detail-badge">일치율 ${item.matchRate || 'N/A'}</span>
+                        <span>${item.title} (${item.year})</span>
+                        <span class="detail-badge">일치율 ${item.matchRate}</span>
                     </div>
-                    
-                    <div class="info-block">
-                        <span class="info-label">✨ 심층 분석 기반 상세 추천 이유</span>
-                        <p class="info-text">${detailedReason}</p>
-                    </div>
-
+                    <div class="info-block"><span class="info-label">추천 이유</span><p class="info-text">${item.detailedReason}</p></div>
                     <div class="spoiler-container">
-                        <button class="toggle-btn" id="spoiler-toggle-${index}" onclick="toggleContent('spoiler', ${index})">
-                            <span class="panel-title-label">🔴 ACCESS RESTRICTED | 상세 줄거리 요약 (스포일러)</span>
-                            <span class="toggle-icon">▼</span>
+                        <button class="toggle-btn" onclick="toggleContent('spoiler', ${index})">
+                            <span class="panel-title-label">🔴 줄거리 (클릭하여 보기)</span><span class="toggle-icon">▼</span>
                         </button>
-                        <div class="spoiler-content expandable-content" id="spoiler-content-${index}">
-                            <span class="content-label">데이터 로그: STORY PLOT</span>
-                            <p class="spoiler-text">${summaryText}</p>
-                        </div>
+                        <div id="spoiler-content-${index}" class="spoiler-content expandable-content"><p class="spoiler-text">${item.summary}</p></div>
                     </div>
-
                     <div class="review-container">
-                        <button class="toggle-btn" id="review-toggle-${index}" onclick="toggleContent('review', ${index})">
-                            <span class="panel-title-label">🔵 PUBLIC DATA | 시청자 및 평론가 평가</span>
-                            <span class="toggle-icon">▼</span>
+                         <button class="toggle-btn" onclick="toggleContent('review', ${index})">
+                            <span class="panel-title-label">🔵 평가 보기</span><span class="toggle-icon">▼</span>
                         </button>
-                        <div class="review-content expandable-content" id="review-content-${index}">
-                            <div class="review-section">
-                                <span class="content-label">🧑 USER FEEDBACK</span>
-                                <p class="review-text">${audienceReview}</p>
-                            </div>
-                            <div class="review-section">
-                                <span class="content-label">⭐ CRITIC ANALYSIS</span>
-                                <p class="review-text">${criticReview}</p>
-                            </div>
+                        <div id="review-content-${index}" class="review-content expandable-content">
+                            <div class="review-section"><span class="content-label">관객</span><p class="review-text">${item.reviews.audience}</p></div>
+                            <div class="review-section"><span class="content-label">평론가</span><p class="review-text">${item.reviews.critic}</p></div>
                         </div>
                     </div>
                 </div>
             </div>
         `;
     }
-    
-    /**
-     * [UI 기능] 콘텐츠 블록 토글 함수 (줄거리/평가 모두 확장/축소 토글)
-     */
+
     function toggleContent(type, index) {
-        const contentId = `${type}-content-${index}`;
-        const contentEl = document.getElementById(contentId);
-        const toggleEl = document.getElementById(`${type}-toggle-${index}`);
-        
-        if (contentEl.classList.contains('expanded')) {
-            // 접기
-            contentEl.classList.remove('expanded');
-            toggleEl.classList.remove('expanded-btn');
-            if (type === 'spoiler') {
-                toggleEl.querySelector('.panel-title-label').textContent = '🔴 ACCESS RESTRICTED | 상세 줄거리 요약 (스포일러)';
-            } else if (type === 'review') {
-                toggleEl.querySelector('.panel-title-label').textContent = '🔵 PUBLIC DATA | 시청자 및 평론가 평가';
-            }
-        } else {
-            // 펼치기
-            contentEl.classList.add('expanded');
-            toggleEl.classList.add('expanded-btn');
-            if (type === 'spoiler') {
-                toggleEl.querySelector('.panel-title-label').textContent = '🟢 ACCESS GRANTED | 상세 줄거리 요약 (스포일러)';
-            } else if (type === 'review') {
-                toggleEl.querySelector('.panel-title-label').textContent = '🔵 PUBLIC DATA | 평가 정보 숨기기';
-            }
-        }
+        const content = document.getElementById(`${type}-content-${index}`);
+        content.classList.toggle('expanded');
     }
 </script>
 
 </body>
 </html>
-
-
