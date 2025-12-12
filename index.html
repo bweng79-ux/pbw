@@ -568,6 +568,7 @@
     /**
      * [설정] API 서버 주소 상수
      * 경로명(/recommend_movies)은 fetch 요청에 추가됩니다.
+     * 주의: 백엔드 주소의 포트 :8000은 제거해야 합니다. Replit 환경에서는 프록시가 자동 처리합니다.
      */
     const BASE_SERVER_URL = "https://c3fc9cb9-cce9-445c-963d-c1c1ea48a69e-00-h6rqi5pdnpvp.sisko.replit.dev"; 
     const RECOMMEND_ENDPOINT = "/recommend_movies"; // 목록을 반환하는 엔드포인트 지정
@@ -579,7 +580,7 @@
     let currentDisplayCount = 0; // 현재 화면에 표시된 작품 수
     let loadCount = 0; // '더 보기' 버튼 클릭 횟수 (최대 2회)
 
-    // 백엔드 연결 실패 시를 대비한 데모용 데이터는 그대로 유지합니다.
+    // 백엔드 연결 실패 시를 대비한 데모용 데이터 (이 데이터는 UI 구조를 보여주기 위해 유지합니다.)
     const MOCK_DATA = [
         {
             title: "블레이드 러너 2049",
@@ -645,11 +646,23 @@
                 audience: "크리스토퍼 놀란의 천재적인 아이디어와 압도적인 스케일. 두 번, 세 번 봐도 새로운 것을 발견하는 지적인 즐거움이 있다. 근래 가장 완벽한 블록버스터.",
                 critic: "시각적 혁명과 치밀한 스토리텔링의 완벽한 결합. 꿈과 무의식이라는 주제를 가장 역동적으로 표현한 놀라운 성취. 21세기 최고의 영화 중 하나로 손꼽힌다."
             }
-        }
+        },
+         {
+            title: "문 (Moon)",
+            director: "던컨 존스",
+            year: "2009",
+            reason: "고립된 공간 속에서 자신의 정체성과 복제 기술의 윤리적 문제를 마주하는 미니멀한 서사.",
+            detailedReason: "소수의 인물이 극도로 고립된 공간에서 정체성에 대한 심도 깊은 질문을 던지는 미니멀리즘 SF의 걸작입니다. 복제 기술이 초래하는 윤리적 딜레마와 서서히 밝혀지는 충격적인 진실은 강한 몰입감을 선사합니다.",
+            summary: "달 기지에서 홀로 3년 계약 기간 동안 근무하며 지구에 에너지를 공급하는 임무를 맡은 우주인 샘 벨. 그는 인공지능 로봇 거티와만 대화하며 지루하고 고독한 일상을 보낸다. 계약 기간이 거의 끝나갈 무렵, 샘은 알 수 없는 사고를 겪고 깨어난다. 그리고 기지 안에서 자신과 똑같이 생긴 또 다른 샘 벨을 발견하게 된다. 충격과 혼란 속에서 두 샘은 누가 진짜이고 누가 복제본인지, 그리고 3년 계약의 이면에 숨겨진 회사와 시스템의 잔혹한 비밀을 파헤치기 시작한다. 이 과정에서 샘은 인간의 정체성과 기억의 의미에 대해 깊이 고뇌하게 되며, 자신의 존재 이유를 찾기 위한 처절한 노력을 시작한다. 단조로운 배경 속에서도 샘 록웰의 뛰어난 연기와 치밀한 스토리텔링이 빛나는 영화입니다.",
+            matchRate: "65%",
+            reviews: {
+                audience: "신선한 충격과 슬픔을 주는 영화. 단조로운 배경과 적은 인물로 이렇게 훌륭한 이야기를 만들어내다니 놀랍다. 훌륭한 독립 SF 영화의 예시.",
+                critic: "화려함 대신 영리한 아이디어와 감성적인 연출로 승부한다. 복제인간이라는 고전적 소재를 가장 인간적인 방식으로 풀어낸 수작. 던컨 존스 감독의 센스가 돋보인다."
+            }
+        },
+        // AI 응답이 11개까지 가능하므로 데모 데이터도 11개까지 채울 수 있습니다. (현재 6개)
     ];
 
-    // MOCK_DATA에 추가 아이템을 더 넣는다면 11개가 초과되지 않도록 관리해야 합니다.
-    // (현재는 5개이므로, AI가 11개를 주면 문제 없음)
 
     /**
      * [핵심 기능] 추천 요청 함수 - /recommend_movies 엔드포인트 호출
@@ -678,11 +691,10 @@
         `;
 
         // 3. 데이터 준비 (백엔드 /recommend_movies 형식에 맞춤)
-        // /recommend_movies는 watched_movies, genre_expansion_movies, atmosphere_movies를 리스트로 요구합니다.
         const requestData = {
             watched_movies: [titleInput.value.trim()], // 분석 대상 영화를 본 영화로 간주
-            genre_expansion_movies: detailInput.value.trim() ? [detailInput.value.trim()] : [], // 상세 요청은 확장 영화로 간주
-            atmosphere_movies: [], // 분위기 영화는 빈 리스트로 둠
+            genre_expansion_movies: detailInput.value.trim() ? [detailInput.value.trim()] : [], 
+            atmosphere_movies: [], 
         };
 
         try {
@@ -696,27 +708,25 @@
             });
 
             if (!response.ok) {
-                // HTTP 상태 코드가 200 범위가 아닐 경우 에러 처리
-                const errorBody = await response.json();
-                throw new Error(`HTTP Error ${response.status}: ${errorBody.detail || errorBody.error?.message || response.statusText}`);
+                const errorBody = await response.json().catch(() => ({}));
+                const errorMessage = errorBody.detail || errorBody.error?.message || response.statusText;
+                throw new Error(`HTTP Error ${response.status}: ${errorMessage}`);
             }
 
             // 응답받은 JSON 파싱
             const result = await response.json();
             
             // 핵심: 백엔드가 반환한 'recommendations' 배열을 allRecommendations에 저장
-            // 백엔드 데이터 구조: { user_analysis: "...", recommendations: [...] }
             if (result && result.recommendations && Array.isArray(result.recommendations)) {
                 
-                // [수정 사항 없음]: 백엔드 데이터 구조와 프론트엔드 MOCK_DATA 구조를 맞추는 임시 처리
-                // 백엔드 응답에는 matchRate, detailedReason 등이 없으므로, 기본값을 설정합니다.
+                // 백엔드 데이터 구조와 프론트엔드 MOCK_DATA 구조를 맞추는 임시 처리
                 allRecommendations = result.recommendations.map((item, index) => ({
                     title: item.title,
-                    director: item.director,
-                    year: item.year,
-                    reason: item.reason, // 짧은 이유
-                    detailedReason: item.reason, // 상세 이유는 일단 짧은 이유와 동일하게 처리
-                    matchRate: `${99 - (index * 5)}%`, // 임의의 일치율 생성 (순위 반영)
+                    director: item.director || '정보 없음', // 누락될 경우 대체
+                    year: item.year || 'N/A', // 누락될 경우 대체
+                    reason: item.reason, 
+                    detailedReason: item.reason, 
+                    matchRate: `${99 - (index * 5)}%`, 
                     summary: "AI가 생성한 데이터에는 상세 줄거리 요약이 포함되어 있지 않습니다. 실제 서비스에서는 이 데이터를 포함할 수 있습니다.",
                     reviews: { audience: "시청자 평가 데이터 없음", critic: "평론가 분석 데이터 없음" }
                 }));
@@ -728,8 +738,7 @@
                 }
 
             } else {
-                // 응답 형태가 예상과 다를 경우 (예: JSON이지만 recommendations 필드가 없을 때)
-                throw new Error("AI 응답 데이터 형식이 올바르지 않습니다. 백엔드 로그를 확인하세요.");
+                throw new Error(`AI 응답 데이터 형식이 올바르지 않습니다. 'recommendations' 배열을 확인하세요. JSON 응답: ${JSON.stringify(result).substring(0, 100)}...`);
             }
 
         } catch (error) {
@@ -745,7 +754,6 @@
                 </div>
             `;
             
-            // 데모용 지연 시간 후 목록 렌더링
             setTimeout(() => {
                 renderList(true); 
             }, 1200); 
@@ -756,7 +764,7 @@
     }
 
     /**
-     * [UI 기능] 목록 렌더링 함수
+     * [UI 기능] 목록 렌더링 함수 (5개 초기 로드, 3개씩 추가 로드 구현)
      * @param {boolean} isInitialLoad - 초기 로드인지 여부 (초기화 및 카운트 설정)
      */
     function renderList(isInitialLoad) {
@@ -765,19 +773,17 @@
         if (isInitialLoad) {
             outputContainer.innerHTML = ''; 
 
-            // 목록 제목 추가
             const listTitle = document.createElement('h3');
             listTitle.className = 'section-header list-section-header';
             listTitle.innerHTML = `추천 작품 목록`;
             outputContainer.appendChild(listTitle);
 
-            // 목록 래퍼 생성 및 추가
             const listDiv = document.createElement('div');
             listDiv.id = 'recommendation-list-wrapper';
             outputContainer.appendChild(listDiv);
 
             currentDisplayCount = 0;
-            loadCount = 0;
+            loadCount = 0; // 초기 로드 시 0으로 재설정
 
             if (!allRecommendations || allRecommendations.length === 0) {
                 listDiv.innerHTML = '<div class="status-msg">일치하는 결과가 없습니다.</div>';
@@ -787,14 +793,10 @@
 
         const listDiv = document.getElementById('recommendation-list-wrapper');
 
-        // 새로 추가할 아이템의 시작 인덱스
         const startIndex = currentDisplayCount;
-        // 다음에 표시할 아이템 수 (초기 로드는 5개, 추가 로드는 3개)
-        const itemsToLoad = isInitialLoad ? 5 : 3;
-        // 실제로 로드할 최종 인덱스
+        const itemsToLoad = isInitialLoad ? 5 : 3; // 5개 초기, 3개씩 추가
         const endIndex = Math.min(startIndex + itemsToLoad, allRecommendations.length);
         
-        // 아이템 렌더링
         for (let i = startIndex; i < endIndex; i++) {
             const item = allRecommendations[i];
             const card = document.createElement('div');
@@ -804,7 +806,7 @@
 
             const matchRateText = item.matchRate || 'N/A';
 
-            // [수정된 부분]: 감독과 년도 추가
+            // 리스트 카드 UI에 제목, 년도, 감독, 유사성(reason) 표시
             card.innerHTML = `
                 <div class="list-rank">${i + 1}</div>
                 <div class="list-content">
@@ -822,20 +824,18 @@
     }
 
     /**
-     * [UI 기능] '더 보기' 버튼 상태 업데이트 및 추가
+     * [UI 기능] '더 많은 추천' 버튼 상태 업데이트 및 추가 (총 2번까지 클릭 가능)
      */
     function updateLoadMoreButton() {
         const outputContainer = document.getElementById('output-container');
         let loadMoreBtn = document.getElementById('loadMoreBtn');
         
-        // 기존 버튼 제거
-        if (loadMoreBtn) loadMoreBtn.remove();
-        
-        // **[UI 요구사항 반영]** 총 11개(5+3+3)가 최대이므로, loadCount를 최대 2회까지만 허용합니다.
+        if (loadMoreBtn) loadMoreBtn.remove(); // 기존 버튼 제거
+
+        // 최대 로드 횟수 (3개씩 2회)
         const maxClicks = 2; 
 
         if (currentDisplayCount < allRecommendations.length) {
-            // '더 보기' 버튼 추가
             loadMoreBtn = document.createElement('button');
             loadMoreBtn.id = 'loadMoreBtn';
             loadMoreBtn.className = 'load-more-btn';
@@ -845,18 +845,17 @@
             
             if (loadCount < maxClicks) { 
                 // 추가 로드 가능
-                loadMoreBtn.textContent = `더 많은 작품 추천 (${nextLoad}개 더 보기)`;
+                loadMoreBtn.textContent = `더 많은 추천 (${nextLoad}개 더 보기)`;
                 loadMoreBtn.onclick = loadMore;
-                outputContainer.appendChild(loadMoreBtn);
-            } else if (loadCount >= maxClicks) {
-                // 최대치(2회) 도달했지만 아직 표시되지 않은 아이템이 남아있을 경우 (11개 초과 시)
+            } else {
+                // 최대 클릭 횟수 도달 (11개 모두 표시되었거나, 2번 클릭 완료)
                 loadMoreBtn.disabled = true;
                 loadMoreBtn.textContent = `더 이상 추천 버튼을 누를 수 없습니다. (총 ${currentDisplayCount}개 표시됨)`;
-                outputContainer.appendChild(loadMoreBtn);
             }
+            outputContainer.appendChild(loadMoreBtn);
 
         } else if (currentDisplayCount === allRecommendations.length && allRecommendations.length > 5) {
-            // 모든 항목 로드 완료 후 최종 메시지 (간결하게 버튼 텍스트로 대체)
+            // 모든 항목 로드 완료
             loadMoreBtn = document.createElement('button');
             loadMoreBtn.id = 'loadMoreBtn';
             loadMoreBtn.className = 'load-more-btn';
@@ -876,16 +875,16 @@
 
 
     /**
-     * [UI 기능] 상세 정보 렌더링 함수
+     * [UI 기능] 상세 정보 렌더링 함수 (팝업 스타일의 상세 페이지)
      */
     function showDetail(index, data) {
         const outputContainer = document.getElementById('output-container');
         const item = data[index];
         
-        // 목록 헤더와 목록 컨테이너 제거 (상세 보기만 남김)
+        // 상세 보기 시 목록 숨김
         outputContainer.innerHTML = '';
         
-        // 백엔드 응답 대비: detailedReason, summary, reviews에 대한 대체 텍스트 정의
+        // 데이터 대체 처리
         const detailedReason = item.detailedReason || item.reason || 'AI로부터 상세 추천 이유를 받지 못했습니다.';
         const summaryText = item.summary || 'AI가 생성한 데이터에는 상세 줄거리 요약이 포함되어 있지 않습니다. 실제 서비스에서는 이 데이터를 포함할 수 있습니다.';
         const audienceReview = item.reviews?.audience || '시청자 평가 데이터 없음';
@@ -935,13 +934,9 @@
                             </div>
                         </div>
                     </div>
-                    
                 </div>
             </div>
         `;
-        
-        // 상세 보기로 이동 시, 모든 토글 콘텐츠는 기본적으로 닫힌 상태를 유지
-        // 필요에 따라 초기 상태를 설정할 수 있습니다.
     }
     
     /**
@@ -976,4 +971,5 @@
 
 </body>
 </html>
+
 
