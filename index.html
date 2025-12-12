@@ -5,67 +5,525 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 시네마 매치업 엔진</title>
     <style>
-        /* 스타일은 기존과 동일하게 유지 */
-        :root { --bg-color: #f0f2f5; --container-bg: #ffffff; --card-bg: #f8f9fa; --accent-primary: #0056b3; --accent-secondary: #d63384; --text-main: #212529; --text-muted: #6c757d; --border-color: #dee2e6; --shadow-sm: 0 2px 4px rgba(0,0,0,0.05); --shadow-md: 0 4px 6px rgba(0,0,0,0.1); --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; --panel-bg: #f0f4f8; --panel-accent: #3b82f6; --panel-text: #344458; --spoiler-bg: #ffffff; --spoiler-border: #ef4444; --review-border: #3b82f6; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: var(--font-main); background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; padding: 40px 20px; }
-        .broadcast-container { width: 100%; max-width: 900px; background: var(--container-bg); border-radius: 12px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; border: 1px solid var(--border-color); }
-        .broadcast-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); }
-        header { padding: 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; background-color: #fff; }
-        .header-content { display: flex; flex-direction: column; gap: 5px; }
-        .main-title { font-size: 26px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
-        .sub-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-        .sub-title span { color: var(--accent-primary); }
-        .live-badge { background-color: var(--accent-primary); color: white; font-size: 11px; font-weight: bold; padding: 6px 12px; border-radius: 20px; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0, 86, 179, 0.3); }
-        .control-panel { padding: 30px; background-color: #fff; }
-        .input-group { margin-bottom: 25px; }
-        .input-label { display: block; font-size: 14px; color: var(--accent-primary); font-weight: 700; margin-bottom: 8px; }
-        input[type="text"], textarea { width: 100%; background-color: #f8f9fa; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); padding: 15px; font-size: 16px; font-family: var(--font-main); transition: all 0.2s ease; outline: none; }
-        input[type="text"]:focus, textarea:focus { border-color: var(--accent-primary); background-color: #fff; box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1); }
-        .analyze-btn { width: 100%; background: var(--accent-primary); color: #fff; border: none; padding: 16px; font-size: 16px; font-weight: 700; border-radius: 6px; cursor: pointer; transition: background 0.2s, transform 0.1s; box-shadow: 0 4px 6px rgba(0, 86, 179, 0.2); }
-        .analyze-btn:hover { background: #004494; transform: translateY(-1px); }
-        .analyze-btn:active { transform: translateY(0); }
-        .results-panel { background-color: #f8f9fa; padding: 30px; min-height: 200px; border-top: 1px solid var(--border-color); }
-        .section-header { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .section-header::before { content: ''; display: block; width: 4px; height: 16px; background-color: var(--accent-secondary); border-radius: 2px; }
-        .list-card { background-color: #fff; border-radius: 8px; margin-bottom: 12px; padding: 15px; display: flex; align-items: center; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); cursor: pointer; transition: background-color 0.2s, transform 0.1s; animation: slideIn 0.5s ease-out forwards; opacity: 0; }
-        .list-card:hover { background-color: #e9f0f6; transform: translateY(-1px); }
-        .list-rank { background-color: var(--accent-primary); color: white; width: 30px; height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; margin-right: 15px; }
-        .list-content { flex-grow: 1; min-width: 0; }
-        .list-title { font-size: 16px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .list-meta { font-size: 13px; color: var(--text-main); margin-top: 2px; font-weight: 500; }
-        .list-reason { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
-        .list-match { font-size: 12px; font-weight: 700; color: var(--accent-secondary); flex-shrink: 0; margin-left: 15px; }
-        .detail-view-wrapper { animation: fadeIn 0.4s ease-out; }
-        .detail-view { background-color: #fff; padding: 25px; border-radius: 8px; box-shadow: var(--shadow-md); margin-top: 20px; }
-        .detail-header { font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .detail-badge { font-size: 13px; padding: 5px 10px; background-color: var(--accent-secondary); color: white; border-radius: 4px; font-weight: 700; }
-        .info-block { margin-bottom: 20px; padding: 15px; background-color: var(--card-bg); border-radius: 6px; border-left: 4px solid var(--accent-primary); }
-        .info-label { font-size: 14px; color: var(--accent-primary); font-weight: 700; margin-bottom: 6px; display: block; }
-        .info-text { font-size: 15px; color: var(--text-main); line-height: 1.6; margin: 0; }
-        .spoiler-container, .review-container { margin-top: 25px; padding: 0; border-radius: 8px; overflow: hidden; background-color: var(--panel-bg); box-shadow: 0 0 10px rgba(0, 0, 0, 0.05); }
-        .spoiler-container { border: 2px solid var(--spoiler-border); }
-        .review-container { border: 2px solid var(--review-border); }
-        .toggle-btn { width: 100%; padding: 15px; border: none; cursor: pointer; font-weight: 700; text-align: left; transition: background-color 0.2s, color 0.2s; color: var(--panel-text); background-color: var(--panel-bg); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .toggle-btn:hover { background-color: #e2e8f0; }
-        .toggle-icon { font-size: 18px; transition: transform 0.3s ease; }
-        .expanded-btn .toggle-icon { transform: rotate(180deg); }
-        .spoiler-content, .review-content { background-color: var(--spoiler-bg); padding: 20px; color: var(--panel-text); }
-        .content-label { font-size: 14px; font-weight: 600; color: var(--panel-accent); margin-bottom: 10px; display: block; border-bottom: 1px dashed rgba(52, 68, 88, 0.2); padding-bottom: 5px; }
-        .spoiler-text, .review-text { font-size: 15px; line-height: 1.7; margin-bottom: 15px; padding: 10px 0; }
-        .expandable-content { max-height: 0; opacity: 0; visibility: hidden; overflow: hidden; transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out, padding 0.5s ease-in-out; padding-top: 0; padding-bottom: 0; }
-        .expanded { max-height: 1000px; opacity: 1; visibility: visible; padding-top: 20px; padding-bottom: 20px; }
-        .back-to-list-btn { background-color: var(--text-muted); color: white; padding: 10px 15px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: background-color 0.2s; }
-        .back-to-list-btn:hover { background-color: #5a6268; }
-        .load-more-btn { width: 100%; background-color: var(--card-bg); color: var(--accent-primary); border: 2px solid var(--accent-primary); padding: 12px; font-size: 15px; font-weight: 700; border-radius: 6px; cursor: pointer; margin-top: 15px; transition: background-color 0.2s, color 0.2s; }
-        .load-more-btn:hover:not(:disabled) { background-color: var(--accent-primary); color: white; }
-        .load-more-btn:disabled { background-color: var(--card-bg); border-color: var(--border-color); color: var(--text-muted); cursor: default; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .spinner-ring { display: inline-block; width: 40px; height: 40px; border: 4px solid rgba(0, 86, 179, 0.2); border-radius: 50%; border-top-color: var(--accent-primary); animation: spin 0.8s linear infinite; margin-bottom: 15px; }
-        .status-msg { text-align: center; line-height: 1.6; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media (max-width: 600px) { .broadcast-container { width: 100%; border: none; border-radius: 0; } }
+        /* * DESIGN THEME: Modern Light Dashboard with High-Tech Panels (Moderated Dark Colors) */
+        :root {
+            --bg-color: #f0f2f5; 
+            --container-bg: #ffffff; 
+            --card-bg: #f8f9fa; 
+            --accent-primary: #0056b3; 
+            --accent-secondary: #d63384; 
+            --text-main: #212529; 
+            --text-muted: #6c757d; 
+            --border-color: #dee2e6;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --font-main: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            
+            /* High-Tech Colors (MODERATED FOR LIGHTER AESTHETIC) */
+            --panel-bg: #f0f4f8; /* Light gray-blue for container/button */
+            --panel-accent: #3b82f6; /* Blue Neon (Accent) */
+            --panel-text: #344458; /* Dark text for contrast */
+            --spoiler-bg: #ffffff; /* Pure white for content background */
+            --spoiler-border: #ef4444; /* Red for warning */
+            --review-border: #3b82f6; /* Blue for info */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        /* Layout Container */
+        .broadcast-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--container-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .broadcast-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        header {
+            padding: 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            background-color: #fff;
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .main-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .sub-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .sub-title span {
+            color: var(--accent-primary);
+        }
+
+        .live-badge {
+            background-color: var(--accent-primary);
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0, 86, 179, 0.3);
+        }
+
+        .control-panel {
+            padding: 30px;
+            background-color: #fff;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 14px;
+            color: var(--accent-primary);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            background-color: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-main);
+            padding: 15px;
+            font-size: 16px;
+            font-family: var(--font-main);
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--accent-primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+        }
+
+        ::placeholder {
+            color: #adb5bd;
+            font-size: 14px;
+        }
+
+        .analyze-btn {
+            width: 100%;
+            background: var(--accent-primary);
+            color: #fff;
+            border: none;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 86, 179, 0.2);
+        }
+
+        .analyze-btn:hover {
+            background: #004494;
+            transform: translateY(-1px);
+        }
+
+        .analyze-btn:active {
+            transform: translateY(0);
+        }
+
+        .results-panel {
+            background-color: #f8f9fa;
+            padding: 30px;
+            min-height: 200px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-header::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 16px;
+            background-color: var(--accent-secondary);
+            border-radius: 2px;
+        }
+
+        /* --- List Card Styles --- */
+        .list-card {
+            background-color: #fff;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            cursor: pointer; 
+            transition: background-color 0.2s, transform 0.1s;
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        
+        .list-card:hover {
+            background-color: #e9f0f6; 
+            transform: translateY(-1px);
+        }
+
+        .list-rank {
+            background-color: var(--accent-primary);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-right: 15px;
+        }
+
+        .list-content {
+            flex-grow: 1;
+            min-width: 0;
+        }
+        
+        .list-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .list-reason {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 3px;
+        }
+        
+        .list-match {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-secondary);
+            flex-shrink: 0;
+            margin-left: 15px;
+        }
+
+        /* --- Detail View Styles --- */
+        .detail-view-wrapper {
+            animation: fadeIn 0.4s ease-out; 
+        }
+
+        .detail-view {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            margin-top: 20px;
+        }
+        
+        .detail-header {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detail-badge {
+            font-size: 13px;
+            padding: 5px 10px;
+            background-color: var(--accent-secondary);
+            color: white;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .info-block {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--card-bg);
+            border-radius: 6px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: var(--accent-primary);
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .info-text {
+            font-size: 15px;
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+        }
+        
+        /* --- High-Tech Panel Styles for Spoiler/Review (LIGHTER) --- */
+        .spoiler-container, .review-container {
+            margin-top: 25px;
+            padding: 0; 
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: var(--panel-bg); /* Light background for the container */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05), 0 0 5px rgba(59, 130, 246, 0.1); 
+        }
+        
+        .spoiler-container {
+            border: 2px solid var(--spoiler-border); /* Warning color border */
+        }
+        .review-container {
+            border: 2px solid var(--review-border); /* Info color border */
+        }
+
+        .toggle-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            text-align: left;
+            transition: background-color 0.2s, color 0.2s;
+            color: var(--panel-text); /* Dark text */
+            background-color: var(--panel-bg); /* Light gray-blue */
+            border-bottom: 1px solid var(--border-color); 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .toggle-btn:hover {
+            background-color: #e2e8f0; /* Slightly darker light */
+        }
+        
+        .toggle-icon {
+            font-size: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .expanded-btn .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .panel-title-label {
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Content Area */
+        .spoiler-content, .review-content {
+            background-color: var(--spoiler-bg); /* Pure White */
+            padding: 20px; 
+            color: var(--panel-text); /* Dark text */
+        }
+
+        .content-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--panel-accent); /* Neon color for internal labels */
+            margin-bottom: 10px;
+            display: block;
+            border-bottom: 1px dashed rgba(52, 68, 88, 0.2); /* Darker dashed line */
+            padding-bottom: 5px;
+        }
+        
+        .spoiler-text, .review-text {
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 15px;
+            padding: 10px 0;
+        }
+        
+        .review-section {
+            margin-bottom: 20px;
+        }
+
+        /* Smooth Expansion/Collapse Logic */
+        .expandable-content {
+            max-height: 0;
+            opacity: 0;
+            visibility: hidden;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out, padding 0.5s ease-in-out;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .expanded {
+            max-height: 1000px; /* Sufficiently large value */
+            opacity: 1;
+            visibility: visible;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        .back-to-list-btn {
+            background-color: var(--text-muted);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.2s;
+        }
+        
+        .back-to-list-btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* Load More Button & Status */
+        .load-more-btn {
+            width: 100%;
+            background-color: var(--card-bg);
+            color: var(--accent-primary);
+            border: 2px solid var(--accent-primary);
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .load-more-btn:hover:not(:disabled) {
+            background-color: var(--accent-primary);
+            color: white;
+        }
+        .load-more-btn:disabled {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-muted);
+            cursor: default;
+        }
+
+        /* --- [START] Modern Spinner Styles --- */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .spinner-ring {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 86, 179, 0.2); /* Light primary color */
+            border-radius: 50%;
+            border-top-color: var(--accent-primary); /* Primary color for rotation part */
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 15px; /* Increased margin */
+        }
+        
+        .status-msg {
+            text-align: center;
+            line-height: 1.6;
+        }
+        /* --- [END] Modern Spinner Styles --- */
+
+        /* Animations */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .broadcast-container {
+                width: 100%;
+                border: none;
+                border-radius: 0;
+            }
+            .list-card {
+                flex-wrap: wrap;
+            }
+            .list-rank {
+                order: 1;
+                margin-right: 10px;
+            }
+            .list-content {
+                order: 2;
+                flex-basis: 70%;
+            }
+            .list-match {
+                order: 3;
+                width: 100%;
+                margin: 5px 0 0 0;
+                text-align: right;
+            }
+        }
     </style>
 </head>
 <body>
@@ -82,15 +540,17 @@
     <div class="control-panel">
         <div class="input-group">
             <label class="input-label">분석 대상 영화 (필수)</label>
-            <input type="text" id="movieTitle" placeholder="사용자가 감명깊게 본 영화 제목">
+            <input type="text" id="movieTitle" 
+                   placeholder="사용자가 감명깊게 본 영화, 연관 작품을 추천받고 싶은 영화 제목을 작성해주십시오">
         </div>
 
         <div class="input-group">
             <label class="input-label">상세 요청 사항 (선택)</label>
-            <textarea id="userDetail" rows="3" placeholder="예: 비슷한 '장르' 추천해줘, 비슷한 '분위기' 추천해줘"></textarea>
+            <textarea id="userDetail" rows="3" 
+                      placeholder="예시 : 이 영화와 비슷한 '장르'를 추천해줘, 이 영화의 '배우가 비슷한 역할'로 나오는 작품을 추천해줘, 이 영화와 '비슷한 분위기'의 작품을 추천해줘"></textarea>
         </div>
 
-        <button class="analyze-btn" onclick="register()">분석 및 추천 시작</button>
+        <button class="analyze-btn" onclick="onRunAIButtonClicked()">분석 및 추천 시작</button>
     </div>
 
     <div class="results-panel">
@@ -106,184 +566,113 @@
 
 <script>
     /**
-     * [설정] 서버 주소 (상대 경로)
-     * 빈 문자열("")로 설정하면 자동으로 현재 접속한 서버(main.py)로 요청을 보냅니다.
-     * "Failed to fetch" 오류를 방지하는 핵심입니다.
+     * [설정] API 서버 주소 상수
      */
-    const BASE_SERVER_URL = ""; 
-    const RECOMMEND_ENDPOINT = "/recommend_movies";
-    
-    let allRecommendations = [];
-    let currentDisplayCount = 0;
-    let loadCount = 0;
+    const BACKEND_BASE_URL = "https://c3fc9cb9-cce9-445c-963d-c1c1ea48a69e-00-h6rqi5pdnpvp.sisko.replit.dev:8000"; 
+    const AI_URL = BACKEND_BASE_URL + "/ai";
 
-    // 데모 데이터 (서버 오류 시 표시)
-    const MOCK_DATA = [
-        { title: "인셉션", director: "크리스토퍼 놀란", year: "2010", reason: "복잡한 플롯과 지적 스릴러", detailedReason: "꿈과 현실을 오가는 구조가 유사합니다.", summary: "타인의 꿈에 들어가 생각을 훔치는 이야기.", matchRate: "98%", reviews: { audience: "최고의 SF", critic: "완벽한 연출" } },
-        { title: "테넷", director: "크리스토퍼 놀란", year: "2020", reason: "시간 역행을 다룬 액션", detailedReason: "시간을 소재로 한 복잡한 서사가 유사합니다.", summary: "시간의 흐름을 뒤집어 세상을 구하는 이야기.", matchRate: "90%", reviews: { audience: "어렵지만 재밌다", critic: "시각적 충격" } }
-    ];
-
-    async function register() {
-        const titleInput = document.getElementById('movieTitle');
-        const detailInput = document.getElementById('userDetail');
-        const outputContainer = document.getElementById('output-container');
-        const analyzeBtn = document.querySelector('.analyze-btn');
-
-        if (!titleInput.value.trim()) {
-            outputContainer.innerHTML = '<div class="status-msg" style="color: var(--accent-secondary);">⚠️ 영화 제목을 입력해주세요.</div>';
-            return;
-        }
-
-        analyzeBtn.disabled = true;
-        analyzeBtn.textContent = 'AI 분석 중...';
-        outputContainer.innerHTML = `
-            <div class="status-msg" style="color: var(--accent-primary); display: flex; flex-direction: column; align-items: center;">
-                <div class="spinner-ring"></div>
-                데이터 처리 중...<br>Gemini AI가 분석 중입니다.
-            </div>
-        `;
-
-        const requestData = {
-            watched_movies: [titleInput.value.trim()],
-            genre_expansion_movies: detailInput.value.trim() ? [detailInput.value.trim()] : [], 
-            atmosphere_movies: [], 
-        };
-
+    /**
+     * [핵심 기능] AI 백엔드에 요청을 보내고 응답을 받는 통신 함수
+     * @param {object} inputs - 백엔드에 보낼 사용자 입력값 객체
+     * @returns {Promise<string>} - AI 응답 텍스트 (answer) 또는 통신 오류 메시지
+     */
+    async function callAI(inputs) {
         try {
-            // BASE_SERVER_URL이 ""(빈 값)이므로 현재 주소로 요청을 보냅니다.
-            const response = await fetch(BASE_SERVER_URL + RECOMMEND_ENDPOINT, {
+            const response = await fetch(AI_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData)
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ inputs: inputs }) // 통신 규격 준수: { "inputs": { ... } }
             });
 
             if (!response.ok) {
-                const errorBody = await response.json().catch(() => ({}));
-                throw new Error(errorBody.detail || response.statusText);
+                // HTTP 상태 코드가 200-299 범위가 아닌 경우
+                return `[통신 오류] 서버 응답 오류: 상태 코드 ${response.status} (${response.statusText})`;
             }
 
             const result = await response.json();
             
-            if (result && result.recommendations) {
-                allRecommendations = result.recommendations.map((item, index) => ({
-                    title: item.title,
-                    director: item.director || '정보 없음',
-                    year: item.year || 'N/A',
-                    reason: item.reason, 
-                    detailedReason: item.detailedReason || item.reason, 
-                    matchRate: item.matchRate || `${99 - (index * 5)}%`, 
-                    summary: item.summary || "줄거리 정보 없음",
-                    reviews: item.reviews || { audience: "평가 없음", critic: "평가 없음" }
-                }));
-                renderList(true);
+            // 통신 규격 준수: 응답 body에서 "answer" 키의 값을 반환
+            if (result && result.answer) {
+                return result.answer; 
             } else {
-                throw new Error("데이터 형식 오류");
+                return `[통신 오류] 서버 응답 JSON 형식 오류: 'answer' 키가 누락되었거나 형식이 잘못됨.`;
             }
 
         } catch (error) {
-            console.error("오류:", error);
-            allRecommendations = MOCK_DATA; 
-            outputContainer.innerHTML = `<div class="status-msg" style="color:red;">❌ 오류: ${error.message}<br>데모 데이터를 표시합니다.</div>`;
-            setTimeout(() => renderList(true), 1500);
-        } finally {
-            analyzeBtn.disabled = false;
-            analyzeBtn.textContent = '분석 및 추천 시작';
+            // 네트워크 오류, CORS 문제 등 fetch 자체의 문제 발생 시
+            console.error("Fetch Error:", error);
+            return `[통신 오류] 네트워크 연결 또는 CORS 문제 발생: ${error.message}`;
         }
     }
 
-    function renderList(isInitialLoad) {
-        const outputContainer = document.getElementById('output-container');
-        if (isInitialLoad) {
-            outputContainer.innerHTML = ''; 
-            const listTitle = document.createElement('h3');
-            listTitle.className = 'section-header';
-            listTitle.innerText = `추천 작품 목록`;
-            outputContainer.appendChild(listTitle);
-
-            const listDiv = document.createElement('div');
-            listDiv.id = 'recommendation-list-wrapper';
-            outputContainer.appendChild(listDiv);
-
-            currentDisplayCount = 0;
-            loadCount = 0;
-        }
-
-        const listDiv = document.getElementById('recommendation-list-wrapper');
-        const startIndex = currentDisplayCount;
-        const itemsToLoad = isInitialLoad ? 5 : 3;
-        const endIndex = Math.min(startIndex + itemsToLoad, allRecommendations.length);
+    /**
+     * [핵심 기능] HTML 페이지에서 사용자 입력값을 수집하여 객체로 반환
+     * @returns {object} - 사용자 입력값 객체
+     */
+    function collectInputsFromPage() {
+        const movieTitleInput = document.getElementById('movieTitle');
+        const userDetailTextarea = document.getElementById('userDetail');
         
-        for (let i = startIndex; i < endIndex; i++) {
-            const item = allRecommendations[i];
-            const card = document.createElement('div');
-            card.className = 'list-card'; 
-            card.onclick = () => showDetail(i); 
-            card.style.animationDelay = `${(i - startIndex) * 0.1}s`;
-            card.innerHTML = `
-                <div class="list-rank">${i + 1}</div>
-                <div class="list-content">
-                    <div class="list-title">${item.title}</div>
-                    <div class="list-meta">감독: ${item.director} | 개봉: ${item.year}</div>
-                    <div class="list-reason">💡 ${item.reason}</div>
-                </div>
-                <div class="list-match">일치율 ${item.matchRate}</div>
-            `;
-            listDiv.appendChild(card);
-        }
-        currentDisplayCount = endIndex;
-        updateLoadMoreButton();
+        const inputs = {
+            movieTitle: movieTitleInput ? movieTitleInput.value.trim() : "",
+            userDetail: userDetailTextarea ? userDetailTextarea.value.trim() : ""
+        };
+        
+        return inputs;
     }
 
-    function updateLoadMoreButton() {
+    /**
+     * [핵심 기능] 분석 버튼 클릭 시 실행되는 메인 로직
+     */
+    async function onRunAIButtonClicked() {
+        const titleInput = document.getElementById('movieTitle');
         const outputContainer = document.getElementById('output-container');
-        let loadMoreBtn = document.getElementById('loadMoreBtn');
-        if (loadMoreBtn) loadMoreBtn.remove();
 
-        if (currentDisplayCount < allRecommendations.length && loadCount < 2) {
-            loadMoreBtn = document.createElement('button');
-            loadMoreBtn.id = 'loadMoreBtn';
-            loadMoreBtn.className = 'load-more-btn';
-            loadMoreBtn.textContent = `더 보기 (${Math.min(allRecommendations.length - currentDisplayCount, 3)}개)`;
-            loadMoreBtn.onclick = () => { loadCount++; renderList(false); };
-            outputContainer.appendChild(loadMoreBtn);
+        // 1. 유효성 검사
+        if (!titleInput.value.trim()) {
+            console.error("분석할 영화 제목을 입력해주세요.");
+            outputContainer.innerHTML = '<div class="status-msg" style="color: var(--accent-secondary);">⚠️ 분석할 영화 제목을 입력해주세요.</div>';
+            return;
         }
-    }
 
-    function showDetail(index) {
-        const outputContainer = document.getElementById('output-container');
-        const item = allRecommendations[index];
+        // 2. 로딩 상태 UI 표시 (모던 스피너 적용)
         outputContainer.innerHTML = `
-            <div class="detail-view-wrapper">
-                <button class="back-to-list-btn" onclick="renderList(true)">&larr; 목록으로 돌아가기</button> <div class="detail-view">
-                    <div class="detail-header">
-                        <span>${item.title} (${item.year})</span>
-                        <span class="detail-badge">일치율 ${item.matchRate}</span>
-                    </div>
-                    <div class="info-block"><span class="info-label">추천 이유</span><p class="info-text">${item.detailedReason}</p></div>
-                    <div class="spoiler-container">
-                        <button class="toggle-btn" onclick="toggleContent('spoiler', ${index})">
-                            <span class="panel-title-label">🔴 줄거리 (클릭하여 보기)</span><span class="toggle-icon">▼</span>
-                        </button>
-                        <div id="spoiler-content-${index}" class="spoiler-content expandable-content"><p class="spoiler-text">${item.summary}</p></div>
-                    </div>
-                    <div class="review-container">
-                         <button class="toggle-btn" onclick="toggleContent('review', ${index})">
-                            <span class="panel-title-label">🔵 평가 보기</span><span class="toggle-icon">▼</span>
-                        </button>
-                        <div id="review-content-${index}" class="review-content expandable-content">
-                            <div class="review-section"><span class="content-label">관객</span><p class="review-text">${item.reviews.audience}</p></div>
-                            <div class="review-section"><span class="content-label">평론가</span><p class="review-text">${item.reviews.critic}</p></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="status-msg" style="color: var(--accent-primary); display: flex; flex-direction: column; align-items: center;">
+                <div class="spinner-ring"></div>
+                데이터 처리 중...<br>AI 백엔드로 요청 전송 및 분석 중...
             </div>
         `;
+
+        // 3. 입력값 수집 및 AI 호출
+        const inputs = collectInputsFromPage();
+        const aiAnswer = await callAI(inputs);
+
+        // 4. 결과 표시
+        // AI의 결과 answer를 HTML의 출력 영역(output-container)에 표시합니다.
+        outputContainer.innerHTML = `
+            <div class="section-header">AI 분석 결과</div>
+            <div style="background-color: #fff; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <pre style="white-space: pre-wrap; word-wrap: break-word; font-family: var(--font-main); font-size: 15px; color: var(--text-main); line-height: 1.6; margin: 0;">${aiAnswer}</pre>
+            </div>
+        `;
+        
+        // 기존 데모 로직: register() 함수가 더 이상 필요 없으므로 제거하고, 
+        // 새로운 onRunAIButtonClicked() 함수 내에 AI 통신 로직을 통합했습니다.
     }
 
-    function toggleContent(type, index) {
-        const content = document.getElementById(`${type}-content-${index}`);
-        content.classList.toggle('expanded');
-    }
+
+    /* ================================================================================
+    * NOTE: 
+    * 기존의 데모 관련 함수 (MOCK_DATA, renderList, updateLoadMoreButton, 
+    * loadMore, showDetail, toggleContent)는 더 이상 AI 통신 로직과 맞지 않거나
+    * onRunAIButtonClicked()에서 호출되지 않으므로 모두 제거했습니다. 
+    * * 대신, AI가 생성한 'answer' 문자열을 <div id="output-container">에 
+    * 그대로 출력하는 간결한 방식으로 대체되었습니다.
+    ================================================================================
+    */
+    
 </script>
 
 </body>
